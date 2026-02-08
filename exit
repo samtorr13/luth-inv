@@ -1,0 +1,8 @@
+ user_id | username  |        email         | joined_date | is_active 
+---------+-----------+----------------------+-------------+-----------
+       1 | jdoe_2026 | john.doe@example.com | 2026-01-18  | t
+       2 | alice_w   | alice@work.com       | 2026-01-18  | t
+       3 | bob_dev   | bob@code.io          | 2026-01-18  | t
+       4 | charlie_s | charlie@site.net     | 2026-01-18  | t
+(4 rows)
+
