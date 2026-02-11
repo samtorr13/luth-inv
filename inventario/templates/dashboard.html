@@ -1,0 +1,874 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Luth Inv.</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="{% static 'js/dashboard.js' %}"></script>
+
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="logo-area">
+                <i class="fas fa-boxes"></i>
+                <div class="logo-text">
+                    <h1>Luth Inv.</h1>
+                    <p>Sistema de Inventario</p>
+                </div>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div class="user-details">
+                    <h3 id="userName">Administrador</h3>
+                    <p id="userRole">Administrador del sistema</p>
+                </div>
+                
+
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </form>
+            </div>
+        </header>
+        
+        <main class="dashboard-main">
+            <nav class="dashboard-sidebar">
+                <ul class="sidebar-menu">
+                    <li><a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
+                    <li><a href="#" data-section="inventario"><i class="fas fa-box"></i> <span>Inventario</span></a></li>
+                    <li><a href="#" data-section="categorias"><i class="fas fa-list"></i> <span>Categorías</span></a></li>
+                    <li><a href="#" data-section="pedidos"><i class="fas fa-shopping-cart"></i> <span>Pedidos</span></a></li>
+                    <li><a href="#" data-section="reportes"><i class="fas fa-chart-bar"></i> <span>Reportes</span></a></li>
+                    <li><a href="#" data-section="usuarios"><i class="fas fa-users"></i> <span>Usuarios</span></a></li>
+                    <li><a href="#" data-section="escuelas"><i class="fas fa-school"></i> <span>Escuelas</span></a></li>
+                    <li><a href="#" data-section="configuracion"><i class="fas fa-cogs"></i> <span>Configuración</span></a></li>
+                </ul>
+            </nav>
+            
+            <section class="dashboard-content">
+                <!-- Sección Dashboard (por defecto) -->
+                <div id="section-dashboard" class="dashboard-section active">
+                    <div class="welcome-message">
+                        <div class="welcome-text">
+                            <h3>Bienvenido al Dashboard de Luth Inv.</h3>
+                            <p id="welcomeDetail">Gestiona el inventario de todas las escuelas de manera centralizada.</p>
+                        </div>
+                        <div class="welcome-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="content-header">
+                        <h2>Resumen General del Sistema</h2>
+                        <div class="date-display" id="currentDate">Cargando fecha...</div>
+                    </div>
+                    
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-school"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalSchools">3</h3>
+                                <p>Escuelas Activas</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalProducts">1,248</h3>
+                                <p>Productos Totales</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="pendingOrders">14</h3>
+                                <p>Pedidos Pendientes</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon red">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="criticalAlerts">8</h3>
+                                <p>Alertas Críticas</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-container">
+                        <div class="section-header">
+                            <h3>Alertas Recientes</h3>
+                            <div class="section-actions">
+                                <button class="btn-action" id="markAllReadBtn">
+                                    <i class="fas fa-check-double"></i>
+                                    <span>Marcar Todas como Leídas</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="alertsList">
+                            <!-- Las alertas se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <div class="section-container">
+                        <div class="section-header">
+                            <h3>Pedidos Pendientes por Aprobar</h3>
+                            <button class="btn-action" id="viewAllOrdersBtn">
+                                <i class="fas fa-list"></i>
+                                <span>Ver Todos</span>
+                            </button>
+                        </div>
+                        <table id="pendingOrdersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID Pedido</th>
+                                    <th>Escuela</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Prioridad</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingOrdersTableBody">
+                                <!-- Los pedidos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">Distribución de Inventario por Escuela</div>
+                        <div class="chart-placeholder" id="inventoryChart">
+                            <i class="fas fa-chart-pie" style="font-size: 3rem; opacity: 0.5;"></i>
+                            <span style="margin-left: 15px;">Gráfico de distribución de inventario</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección Inventario -->
+                <div id="section-inventario" class="dashboard-section">
+                    <div class="content-header">
+                        <h2>Gestión de Inventario</h2>
+                        <div class="header-actions">
+                            <button class="btn-action secondary" id="exportInventoryBtn">
+                                <i class="fas fa-file-export"></i>
+                                <span>Exportar</span>
+                            </button>
+                            <button class="btn-action" id="addProductBtn">
+                                <i class="fas fa-plus"></i>
+                                <span>Agregar Producto</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <input type="text" id="searchInventory" class="filter-input" placeholder="Buscar producto...">
+                        <select id="filterCategory" class="filter-select">
+                            <option value="">Todas las categorías</option>
+                            <option value="material-escolar">Material Escolar</option>
+                            <option value="papeleria">Papelería</option>
+                            <option value="tecnologia">Tecnología</option>
+                            <option value="mobiliario">Mobiliario</option>
+                        </select>
+                        <select id="filterSchool" class="filter-select">
+                            <option value="">Todas las escuelas</option>
+                            <option value="SCH001">Escuela Primaria Norte</option>
+                            <option value="SCH002">Escuela Secundaria Sur</option>
+                            <option value="SCH003">Colegio Centro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="section-container">
+                        <table id="inventoryTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Escuela</th>
+                                    <th>Cantidad</th>
+                                    <th>Mínimo</th>
+                                    <th>Ubicación</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <!-- Los productos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Formulario para agregar/editar producto -->
+                    <div class="form-container" id="productForm" style="display: none;">
+                        <h3 id="productFormTitle">Agregar Nuevo Producto</h3>
+                        <form id="productFormElement">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="productName">Nombre del Producto *</label>
+                                    <input type="text" id="productName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="productCategory">Categoría *</label>
+                                    <select id="productCategory" required>
+                                        <option value="">Seleccionar categoría</option>
+                                        <option value="material-escolar">Material Escolar</option>
+                                        <option value="papeleria">Papelería</option>
+                                        <option value="tecnologia">Tecnología</option>
+                                        <option value="mobiliario">Mobiliario</option>
+                                        <option value="audiovisual">Audiovisual</option>
+                                        <option value="suministros">Suministros</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="productSchool">Escuela *</label>
+                                    <select id="productSchool" required>
+                                        <option value="">Seleccionar escuela</option>
+                                        <option value="SCH001">Escuela Primaria Norte</option>
+                                        <option value="SCH002">Escuela Secundaria Sur</option>
+                                        <option value="SCH003">Colegio Centro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="productQuantity">Cantidad Inicial *</label>
+                                    <input type="number" id="productQuantity" min="0" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="productMinQuantity">Cantidad Mínima *</label>
+                                    <input type="number" id="productMinQuantity" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="productLocation">Ubicación</label>
+                                    <input type="text" id="productLocation" placeholder="Ej: Almacén A">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="productDescription">Descripción</label>
+                                <textarea id="productDescription" rows="3" placeholder="Descripción del producto..."></textarea>
+                            </div>
+                            
+                            <div class="form-buttons">
+                                <button type="button" class="btn-cancel" id="cancelProductBtn">Cancelar</button>
+                                <button type="submit" class="btn-submit" id="saveProductBtn">Guardar Producto</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Sección Categorías -->
+                <div id="section-categorias" class="dashboard-section">
+                    <div class="content-header">
+                        <h2>Gestión de Categorías</h2>
+                        <button class="btn-action" id="addCategoryBtn">
+                            <i class="fas fa-plus"></i>
+                            <span>Nueva Categoría</span>
+                        </button>
+                    </div>
+                    
+                    <div class="section-container">
+                        <table id="categoriesTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Productos</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoriesTableBody">
+                                <!-- Las categorías se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Formulario para agregar/editar categoría -->
+                    <div class="form-container" id="categoryForm" style="display: none;">
+                        <h3 id="categoryFormTitle">Nueva Categoría</h3>
+                        <form id="categoryFormElement">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="categoryName">Nombre de la Categoría *</label>
+                                    <input type="text" id="categoryName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="categoryCode">Código</label>
+                                    <input type="text" id="categoryCode" placeholder="Código único">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="categoryDescription">Descripción</label>
+                                <textarea id="categoryDescription" rows="3" placeholder="Descripción de la categoría..."></textarea>
+                            </div>
+                            
+                            <div class="form-buttons">
+                                <button type="button" class="btn-cancel" id="cancelCategoryBtn">Cancelar</button>
+                                <button type="submit" class="btn-submit" id="saveCategoryBtn">Guardar Categoría</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Sección Pedidos -->
+                <div id="section-pedidos" class="dashboard-section">
+                    <div class="content-header">
+                        <h2>Gestión de Pedidos</h2>
+                        <div class="header-actions">
+                            <button class="btn-action secondary" id="exportOrdersBtn">
+                                <i class="fas fa-file-export"></i>
+                                <span>Exportar</span>
+                            </button>
+                            <select id="orderFilter" class="filter-select">
+                                <option value="all">Todos los pedidos</option>
+                                <option value="pending">Pendientes</option>
+                                <option value="approved">Aprobados</option>
+                                <option value="rejected">Rechazados</option>
+                                <option value="delivered">Entregados</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="section-container">
+                        <table id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID Pedido</th>
+                                    <th>Escuela</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Prioridad</th>
+                                    <th>Fecha Solicitud</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Los pedidos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Sección Reportes -->
+                <div id="section-reportes" class="dashboard-section">
+                    <div class="content-header">
+                        <h2>Reportes e Informes</h2>
+                        <button class="btn-action" id="generateReportBtn">
+                            <i class="fas fa-download"></i>
+                            <span>Generar Reporte</span>
+                        </button>
+                    </div>
+                    
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>24</h3>
+                                <p>Reportes Generados</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>156</h3>
+                                <p>Tendencias Analizadas</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>12</h3>
+                                <p>Reportes Mensuales</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon purple">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>48</h3>
+                                <p>Alertas Registradas</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-container">
+                        <div class="section-header">
+                            <h3>Generar Nuevo Reporte</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reportType">Tipo de Reporte</label>
+                                <select id="reportType">
+                                    <option value="inventario">Inventario General</option>
+                                    <option value="consumo">Consumo por Escuela</option>
+                                    <option value="pedidos">Pedidos por Período</option>
+                                    <option value="alertas">Reporte de Alertas</option>
+                                    <option value="financiero">Análisis Financiero</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="reportPeriod">Período</label>
+                                <select id="reportPeriod">
+                                    <option value="mes">Último Mes</option>
+                                    <option value="trimestre">Último Trimestre</option>
+                                    <option value="semestre">Último Semestre</option>
+                                    <option value="anual">Último Año</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row" id="customDateRange" style="display: none;">
+                            <div class="form-group">
+                                <label for="reportStartDate">Fecha Inicio</label>
+                                <input type="date" id="reportStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="reportEndDate">Fecha Fin</label>
+                                <input type="date" id="reportEndDate">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reportSchool">Escuela (Opcional)</label>
+                            <select id="reportSchool">
+                                <option value="">Todas las escuelas</option>
+                                <option value="SCH001">Escuela Primaria Norte</option>
+                                <option value="SCH002">Escuela Secundaria Sur</option>
+                                <option value="SCH003">Colegio Centro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-buttons" style="margin-top: 20px;">
+                            <button class="btn-submit" id="generateReportNowBtn">
+                                <i class="fas fa-download"></i>
+                                <span>Generar Reporte</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="section-container">
+                        <div class="section-header">
+                            <h3>Reportes Recientes</h3>
+                        </div>
+                        <table id="reportsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID Reporte</th>
+                                    <th>Tipo</th>
+                                    <th>Período</th>
+                                    <th>Escuela</th>
+                                    <th>Fecha Generación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody">
+                                <!-- Los reportes se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Sección Usuarios -->
+                <div id="section-usuarios" class="dashboard-section">
+                    <div class="content-header">
+                        <h2>Gestión de Usuarios</h2>
+                        <button class="btn-action" id="addUserBtn">
+                            <i class="fas fa-plus"></i>
+                            <span>Nuevo Usuario</span>
+                        </button>
+                    </div>
+                    
+                    <div class="section-container">
+                        <table id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Escuela</th>
+                                    <th>Estado</th>
+                                    <th>Último Acceso</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Los usuarios se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Formulario para agregar/editar usuario -->
+                    <div class="form-container" id="userForm" style="display: none;">
+                        <h3 id="userFormTitle">Nuevo Usuario</h3>
+                        <form id="userFormElement">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="userName">Nombre Completo *</label>
+                                    <input type="text" id="userName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="userEmail">Email *</label>
+                                    <input type="email" id="userEmail" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="userRole">Rol *</label>
+                                    <select id="userRole" required>
+                                        <option value="">Seleccionar rol</option>
+                                        <option value="admin">Administrador</option>
+                                        <option value="school-admin">Administrador Escolar</option>
+                                        <option value="school-user">Usuario Escolar</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="userSchool">Escuela</label>
+                                    <select id="userSchool">
+                                        <option value="">Sin escuela (solo para admin)</option>
+                                        <option value="SCH001">Escuela Primaria Norte</option>
+                                        <option value="SCH002">Escuela Secundaria Sur</option>
+                                        <option value="SCH003">Colegio Centro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="userPassword">Contraseña *</label>
+                                    <input type="password" id="userPassword" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="userConfirmPassword">Confirmar Contraseña *</label>
+                                    <input type="password" id="userConfirmPassword" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-buttons">
+                                <button type="button" class="btn-cancel" id="cancelUserBtn">Cancelar</button>
+                                <button type="submit" class="btn-submit" id="saveUserBtn">Guardar Usuario</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Sección Escuelas -->
+                <div id="section-escuelas" class="dashboard-section">
+                    <div class="content-header">
+                        <h2>Gestión de Escuelas</h2>
+                        <button class="btn-action" id="addSchoolBtn">
+                            <i class="fas fa-plus"></i>
+                            <span>Nueva Escuela</span>
+                        </button>
+                    </div>
+                    
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-school"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>3</h3>
+                                <p>Escuelas Activas</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>12</h3>
+                                <p>Usuarios Totales</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>856</h3>
+                                <p>Productos Promedio</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon red">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>5</h3>
+                                <p>Alertas Activas</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-container">
+                        <table id="schoolsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Dirección</th>
+                                    <th>Teléfono</th>
+                                    <th>Contacto</th>
+                                    <th>Usuarios</th>
+                                    <th>Productos</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schoolsTableBody">
+                                <!-- Las escuelas  -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Formulario  -->
+                    <div class="form-container" id="schoolForm" style="display: none;">
+                        <h3 id="schoolFormTitle">Nueva Escuela</h3>
+                        <form id="schoolFormElement">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="schoolName">Nombre de la Escuela *</label>
+                                    <input type="text" id="schoolName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schoolCode">Código de Escuela *</label>
+                                    <input type="text" id="schoolCode" required placeholder="Ej: SCH001">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="schoolAddress">Dirección *</label>
+                                    <input type="text" id="schoolAddress" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schoolPhone">Teléfono</label>
+                                    <input type="tel" id="schoolPhone">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="schoolContactName">Nombre del Contacto *</label>
+                                    <input type="text" id="schoolContactName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schoolContactEmail">Email del Contacto *</label>
+                                    <input type="email" id="schoolContactEmail" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-buttons">
+                                <button type="button" class="btn-cancel" id="cancelSchoolBtn">Cancelar</button>
+                                <button type="submit" class="btn-submit" id="saveSchoolBtn">Guardar Escuela</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Configuración -->
+                <div id="section-configuracion" class="dashboard-section">
+                    <div class="content-header">
+                        <h2>Configuración del Sistema</h2>
+                    </div>
+                    
+                    <div class="section-container">
+                        <h3>Configuración General</h3>
+                        <form id="generalSettingsForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="systemName">Nombre del Sistema</label>
+                                    <input type="text" id="systemName" value="Luth Inv.">
+                                </div>
+                                <div class="form-group">
+                                    <label for="systemEmail">Email del Sistema</label>
+                                    <input type="email" id="systemEmail" value="soporte@luthinv.com">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="lowStockThreshold">Umbral de Stock Bajo (%)</label>
+                                    <input type="number" id="lowStockThreshold" min="1" max="100" value="20">
+                                </div>
+                                <div class="form-group">
+                                    <label for="criticalStockThreshold">Umbral de Stock Crítico (%)</label>
+                                    <input type="number" id="criticalStockThreshold" min="1" max="100" value="10">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="autoAlert">Alertas Automáticas</label>
+                                    <select id="autoAlert">
+                                        <option value="true" selected>Activadas</option>
+                                        <option value="false">Desactivadas</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="autoReport">Reportes Automáticos</label>
+                                    <select id="autoReport">
+                                        <option value="true">Activados</option>
+                                        <option value="false" selected>Desactivados</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-buttons">
+                                <button type="submit" class="btn-submit">Guardar Configuración</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="section-container">
+                        <div class="section-header">
+                            <h3>Configuración de Notificaciones</h3>
+                        </div>
+                        <form id="notificationSettingsForm">
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="checkbox" id="notifyLowStock" checked>
+                                    <span>Notificar sobre stock bajo</span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="checkbox" id="notifyNewOrders" checked>
+                                    <span>Notificar sobre nuevos pedidos</span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="checkbox" id="notifyOrderStatus" checked>
+                                    <span>Notificar cambios en estado de pedidos</span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="checkbox" id="notifySystemAlerts">
+                                    <span>Notificar alertas del sistema</span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-buttons">
+                                <button type="submit" class="btn-submit">Guardar Preferencias</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="section-container">
+                        <div class="section-header">
+                            <h3>Respaldo y Mantenimiento</h3>
+                        </div>
+                        <div class="form-buttons" style="justify-content: flex-start; gap: 15px;">
+                            <button class="btn-action" id="backupBtn">
+                                <i class="fas fa-database"></i>
+                                <span>Crear Respaldo</span>
+                            </button>
+                            <button class="btn-action secondary" id="clearCacheBtn">
+                                <i class="fas fa-broom"></i>
+                                <span>Limpiar Caché</span>
+                            </button>
+                            <button class="btn-action" style="background-color: #e74c3c;" id="systemLogsBtn">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Ver Logs del Sistema</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="dashboard-footer">
+            <div class="footer-content">
+                <div class="footer-copyright">
+                    © 2023 Luth Inv. - Sistema de Inventario. v1.2.0
+                </div>
+                <div class="footer-links">
+                    <a href="#">Soporte</a>
+                    <a href="#">Documentación</a>
+                    <a href="#">Política de Privacidad</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal para detalles -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detalles</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div id="modalContent">
+                <!-- Contenido dinámico del modal -->
+            </div>
+        </div>
+    </div>
+
+    <!-- confirmación -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="confirmModalTitle">Confirmar Acción</h3>
+                <button class="modal-close" id="confirmModalClose">&times;</button>
+            </div>
+            <div id="confirmModalContent">
+                <!-- Contenido  -->
+            </div>
+            <div class="form-buttons" style="margin-top: 20px;">
+                <button type="button" class="btn-cancel" id="confirmCancelBtn">Cancelar</button>
+                <button type="button" class="btn-submit" id="confirmActionBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    
+</body>
+</html>

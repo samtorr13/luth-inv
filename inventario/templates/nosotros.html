@@ -1,0 +1,182 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosotros - Luth Inv.</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/dashboardes.css' %}">
+     <link rel="stylesheet" href="{% static 'css/nosotros.css' %}">
+    <script src="{% static 'js/nosotros.js' %}"></script>
+</head>
+<body>
+    <div class="about-container">
+      
+        <header class="about-header">
+            <div class="logo-area">
+                <i class="fas fa-school"></i>
+                <div class="logo-text">
+                    <h1>Luth Inv.</h1>
+                    <p>Sistema de Inventario Musical</p>
+                </div>
+            </div>
+            
+            <nav class="nav-links">
+                <a href="{% url 'home' %}" class="nav-link">Home</a>
+                
+                <a href="{% url 'nosotros' %}" class="nav-link active">Nosotros</a>
+            </nav>
+        </header>
+        
+     
+        <main class="about-main">
+            <div class="about-content">
+                <section class="about-hero">
+                    <h1>Sobre Nosotros</h1>
+                    <p>
+                        Este es un proyecto de los estudiantes de la UNEXCA, núcleo La Floresta, 
+                        alumnos de la profesora Anthony Acosta, para el proyecto "Gestión de Inventario 
+                        de Instrumentos Musicales" de las Orquestas del Núcleo Colegio de Ingenieros, 
+                        donde tenemos como tutor a Ivanovich.
+                    </p>
+                       <button class="back-button" onclick="window.location.href='{% url 'home' %}'">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver al Dashboard
+                    </button>
+                </section>
+                
+              
+                <section class="about-details">
+                    <h2>Detalles del Proyecto</h2>
+                    <p>
+                        El sistema Luth Inv. fue desarrollado para optimizar la gestión de inventario 
+                        de instrumentos musicales en instituciones educativas, facilitando el control 
+                        de recursos y mejorando la eficiencia en la distribución y mantenimiento de 
+                        los instrumentos.
+                    </p>
+                    
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <h3><i class="fas fa-university"></i> Institución</h3>
+                            <p>UNEXCA - Núcleo La Floresta</p>
+                        </div>
+                        <div class="detail-item">
+                            <h3><i class="fas fa-chalkboard-teacher"></i> Profesora</h3>
+                            <p>Anthony Acosta</p>
+                        </div>
+                        <div class="detail-item">
+                            <h3><i class="fas fa-user-tie"></i> Tutor</h3>
+                            <p>Ivanovich</p>
+                        </div>
+                        <div class="detail-item">
+                            <h3><i class="fas fa-guitar"></i> Proyecto</h3>
+                            <p>Gestión de Inventario Musical</p>
+                        </div>
+                    </div>
+                </section>
+                
+                
+                <section class="team-section">
+                    <h2>Nuestro Equipo de Desarrollo</h2>
+                    <div class="team-grid">
+                        <!-- Miembro 1 - Ale -->
+                        <div class="team-member">
+                            <div class="member-photo">
+                                <img src="{% static 'img/ale.webp' %}"
+                                     alt="Alejandro Gamboa" 
+                                    >
+                            </div>
+                            <h3 class="member-name">Alejandro Gamboa</h3>
+                            <span class="member-age">19 años</span>
+                            <p class="member-career">TSU Informatica</p>
+                            <span class="member-role">Desarrollador Frontend</span>
+                        </div>
+                        
+                        <!-- Miembro 2 - Daniela-->
+                        <div class="team-member">
+                            <div class="member-photo">
+                                <img src="{% static 'img/dani.jpg' %}"
+                                     alt="Daniela Cermeño" 
+                                     >
+                            </div>
+                            <h3 class="member-name">Daniela Cermeño</h3>
+                            <span class="member-age">19 años</span>
+                            <p class="member-career">TSU Informatica</p>
+                            <span class="member-role"></span>
+                        </div>
+                        
+                        <!-- Miembro 3 - Carlos Palacios -->
+                        <div class="team-member">
+                            <div class="member-photo">
+                                <img src="{% static 'img/cdpg.jpg' %}" 
+                                     alt="Carlos Palacios" 
+                                    >
+                            </div>
+                            <h3 class="member-name">Carlos Palacios</h3>
+                            <span class="member-age">19 años</span>
+                            <p class="member-career">TSU Informatica</p>
+                            <span class="member-role"></span>
+                        </div>
+                        
+                        <!-- Miembro 4 - Arturo Gamboa -->
+                        <div class="team-member">
+                            <div class="member-photo">
+                                <img src="{% static 'img/art.jpg' %}"
+                                     alt="Arturo Gamboa" 
+                                     >
+                            </div>
+                            <h3 class="member-name">Arturo Gamboa</h3>
+                            <span class="member-age">19 años</span>
+                            <p class="member-career">TSU Informatica</p>
+                            <span class="member-role"></span>
+                        </div>
+                        
+                        <!-- Miembro 5 - Sam -->
+                        <div class="team-member">
+                            <div class="member-photo">
+                                <img src="{% static 'img/sam.jpg' %}"
+                                     alt="Sameul Torres" 
+                                     >
+                            </div>
+                            <h3 class="member-name">Samuel Torres</h3>
+                            <span class="member-age">19 años</span>
+                            <p class="member-career">TSU Informatica</p>
+                            <span class="member-role"></span>
+                        </div>
+                        
+                        <!-- Miembro 6 - Christian -->
+                        <div class="team-member">
+                            <div class="member-photo">
+                                <img src="{% static 'img/chris.webp' %}"
+                                     alt="Christian Mendoza" 
+                                     >
+                            </div>
+                            <h3 class="member-name">Christian Mendoza</h3>
+                            <span class="member-age">19 años</span>
+                            <p class="member-career">TSU Informatica</p>
+                            <span class="member-role"></span>
+                        </div>
+                    </div>
+                </section>
+                
+            </div>
+        </main>
+        
+        <footer class="about-footer">
+            <div class="footer-content">
+                <div class="footer-copyright">
+                    © 2023 Luth Inv. - Sistema de Inventario Musical. Todos los derechos reservados.
+                </div>
+                <div class="footer-links">
+                    <a href="#">Política de Privacidad</a>
+                    <a href="#">Términos de Servicio</a>
+                    <a href="#">Contacto</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    
+</body>
+</html>
