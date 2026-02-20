@@ -1,8 +1,18 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Obtener información del usuario desde sessionStorage
     const userData = JSON.parse(sessionStorage.getItem('luth_user'));
+    
+    // SI NO HAY USUARIO LOGUEADO, redirigir al login
+    if (!userData) {
+        window.location.href = '/';
+        return;
+    }
 
-
+    // SI EL USUARIO ES ADMINISTRADOR, redirigir al dashboard de admin
+    if (userData.type === 'admin') {
+        window.location.href = 'dashboard.html';
+        return;
+    }
     
     // Datos de inventario para cada escuela
     const schoolInventory = {

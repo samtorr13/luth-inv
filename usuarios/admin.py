@@ -15,11 +15,11 @@ class CustomUserAdmin(UserAdmin):
 
 
     fieldsets = UserAdmin.fieldsets + (
-        ('Información de Lutería', {'fields': ('rol', 'nro_tlf',)}),
+        ('Información de Lutería', {'fields': ('rol', 'nro_tlf', 'admin_of')}),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Información de Lutería', {'fields': ('rol', 'nro_tlf', )}),
+        ('Información de Lutería', {'fields': ('rol', 'nro_tlf', 'admin_of')}),
     )
 
 

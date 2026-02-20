@@ -8,8 +8,8 @@ class Inventarios(models.Model):
     es_depo = models.BooleanField(default=False, verbose_name='Es Depósito Central?')
     def __str__(self):
         if self.es_depo:
-             return f'Deposito {self.name}'
-        return f"inventario de {self.name}"
+             return f'Deposito: {self.name}'
+        return f"inventario: {self.name}"
     
     class Meta:
             db_table = ''

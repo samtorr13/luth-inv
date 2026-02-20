@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-   
+    const userData = JSON.parse(sessionStorage.getItem('luth_user'));
     
-
-
     
     const systemData = {
         schools: [

@@ -7,7 +7,9 @@
     <title>Dashboard Admin - Luth Inv.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+
     <script src="{% static 'js/dashboard.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
 
 </head>
 <body>
@@ -24,8 +26,8 @@
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">A</div>
                 <div class="user-details">
-                    <h3 id="userName">Administrador</h3>
-                    <p id="userRole">Administrador del sistema</p>
+                    <h3 id="userName">{{ user.first_name }} {{ user.last_name }}</h3>
+                    <p id="userRole">Administrador de {{ user.admin_of.name }}</p>
                 </div>
                 
 
@@ -77,7 +79,7 @@
                                 <i class="fas fa-school"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="totalSchools">3</h3>
+                                <h3 id="totalSchools">{{ escuelas.count }}</h3>
                                 <p>Escuelas Activas</p>
                             </div>
                         </div>
@@ -87,7 +89,7 @@
                                 <i class="fas fa-boxes"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="totalProducts">1,248</h3>
+                                <h3 id="totalProducts">{{ materiales.count }}</h3>
                                 <p>Productos Totales</p>
                             </div>
                         </div>
@@ -107,7 +109,7 @@
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="criticalAlerts">8</h3>
+                                <h3 id="criticalAlerts">{{ alertas.count }}</h3>
                                 <p>Alertas Críticas</p>
                             </div>
                         </div>
@@ -123,8 +125,20 @@
                                 </button>
                             </div>
                         </div>
+
                         <div id="alertsList">
-                            <!-- Las alertas se cargarán dinámicamente -->
+                            {% for alerta in recent_alerts %}
+
+                            <ul>
+                                <li>
+                                <div class="alert-item">
+                            
+                                    Alerta {{ alerta.id }}: {{ alerta.msg }} - {{ alerta.fecha|date:"d M Y H:i" }}<br>
+
+                                </div>
+                                </li>
+                            <ul>
+                            {% endfor %}
                         </div>
                     </div>
                     
