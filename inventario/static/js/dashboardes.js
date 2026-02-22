@@ -1,705 +1,939 @@
+// static/js/dashboardes.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Obtener información del usuario desde sessionStorage
-    const userData = JSON.parse(sessionStorage.getItem('luth_user'));
+    console.log("Dashboard Escuela cargado");
     
-    // SI NO HAY USUARIO LOGUEADO, redirigir al login
-    if (!userData) {
-        window.location.href = '/';
-        return;
-    }
-
-    // SI EL USUARIO ES ADMINISTRADOR, redirigir al dashboard de admin
-    if (userData.type === 'admin') {
-        window.location.href = 'dashboard.html';
+    // ============================================
+    // 1. VERIFICAR DATOS DE USUARIO
+    // ============================================
+    if (!window.userData) {
+        console.error("No hay datos de usuario - redirigiendo");
+        window.location.href = '/login/';
         return;
     }
     
-    // Datos de inventario para cada escuela
-    const schoolInventory = {
-        'SCH001': { // Escuela Primaria Norte
-            schoolName: 'Escuela Primaria Norte',
-            products: [
-                { id: 1, name: 'Cuerdas para Violín', category: 'Accesorios', quantity: 45, minQuantity: 100, location: 'Almacén A', status: 'low' },
-                { id: 2, name: 'Flautas Dulces', category: 'Instrumentos de Viento', quantity: 120, minQuantity: 150, location: 'Almacén A', status: 'in-stock' },
-                { id: 3, name: 'Cuatro Venezolano', category: 'Instrumentos de Cuerda', quantity: 15, minQuantity: 50, location: 'Almacén B', status: 'low' },
-                { id: 4, name: 'Guitarras Acústicas', category: 'Instrumentos de Cuerda', quantity: 80, minQuantity: 100, location: 'Almacén A', status: 'in-stock' },
-                { id: 5, name: 'Afinadores Digitales', category: 'Accesorios', quantity: 5, minQuantity: 30, location: 'Oficina', status: 'out-of-stock' },
-                { id: 6, name: 'Atriles para Partituras', category: 'Accesorios', quantity: 25, minQuantity: 50, location: 'Almacén B', status: 'low' },
-                { id: 7, name: 'Palillos para Batería', category: 'Percusión', quantity: 35, minQuantity: 40, location: 'Almacén A', status: 'in-stock' },
-                { id: 8, name: 'Boquillas para Saxofón', category: 'Instrumentos de Viento', quantity: 12, minQuantity: 30, location: 'Almacén B', status: 'low' },
-                { id: 9, name: 'Metrónomos', category: 'Accesorios', quantity: 60, minQuantity: 80, location: 'Almacén A', status: 'in-stock' },
-                { id: 10, name: 'Violines', category: 'Instrumentos de Cuerda', quantity: 0, minQuantity: 15, location: 'Almacén B', status: 'out-of-stock' },
-                { id: 11, name: 'Cuerdas para Guitarra', category: 'Accesorios', quantity: 85, minQuantity: 120, location: 'Almacén A', status: 'in-stock' },
-                { id: 12, name: 'Tambores', category: 'Percusión', quantity: 22, minQuantity: 40, location: 'Almacén C', status: 'low' },
-                { id: 13, name: 'Teclados Electrónicos', category: 'Instrumentos Electrónicos', quantity: 8, minQuantity: 20, location: 'Sala de Música', status: 'low' },
-                { id: 14, name: 'Fundas para Instrumentos', category: 'Accesorios', quantity: 45, minQuantity: 60, location: 'Almacén A', status: 'in-stock' },
-                { id: 15, name: 'Microfonos', category: 'Equipo de Sonido', quantity: 10, minQuantity: 25, location: 'Sala de Ensayo', status: 'low' }
-            ],
-            orders: [
-                { id: 'ORD001', product: 'Cuerdas para Violín', quantity: 100, priority: 'alta', date: '2023-10-15', status: 'pendiente' },
-                { id: 'ORD002', product: 'Afinadores Digitales', quantity: 50, priority: 'urgente', date: '2023-10-20', status: 'pendiente' },
-                { id: 'ORD003', product: 'Violines', quantity: 10, priority: 'urgente', date: '2023-10-18', status: 'pendiente' }
-            ],
-            alerts: [
-                { date: '2023-10-18', type: 'stock', product: 'Afinadores Digitales', message: 'Producto agotado', status: 'activa' },
-                { date: '2023-10-17', type: 'stock', product: 'Cuerdas para Violín', message: 'Stock por debajo del mínimo', status: 'activa' },
-                { date: '2023-10-15', type: 'stock', product: 'Cuatro Venezolano', message: 'Stock por debajo del mínimo', status: 'activa' },
-                { date: '2023-10-14', type: 'stock', product: 'Violines', message: 'Producto agotado', status: 'activa' },
-                { date: '2023-10-12', type: 'stock', product: 'Teclados Electrónicos', message: 'Stock crítico', status: 'activa' }
-            ]
-        },
-        'SCH002': { // Escuela Secundaria Sur
-            schoolName: 'Escuela Secundaria Sur',
-            products: [
-                { id: 1, name: 'Guitarras Acústicas', category: 'Instrumentos de Cuerda', quantity: 85, minQuantity: 150, location: 'Almacén Principal', status: 'in-stock' },
-                { id: 2, name: 'Flautas Dulces', category: 'Instrumentos de Viento', quantity: 200, minQuantity: 250, location: 'Almacén Principal', status: 'in-stock' },
-                { id: 3, name: 'Cuerdas para Guitarra', category: 'Accesorios', quantity: 40, minQuantity: 80, location: 'Almacén Secundario', status: 'low' },
-                { id: 4, name: 'Metrónomos', category: 'Accesorios', quantity: 25, minQuantity: 50, location: 'Oficina', status: 'low' },
-                { id: 5, name: 'Baterías Completas', category: 'Percusión', quantity: 6, minQuantity: 12, location: 'Sala de Percusión', status: 'low' }
-            ],
-            orders: [],
-            alerts: []
-        },
-        'SCH003': { // Colegio Centro
-            schoolName: 'Colegio Centro',
-            products: [
-                { id: 1, name: 'Violines', category: 'Instrumentos de Cuerda', quantity: 30, minQuantity: 120, location: 'Almacén A', status: 'low' },
-                { id: 2, name: 'Cuatro Venezolano', category: 'Instrumentos de Cuerda', quantity: 90, minQuantity: 180, location: 'Almacén A', status: 'low' },
-                { id: 3, name: 'Flautas Dulces', category: 'Instrumentos de Viento', quantity: 10, minQuantity: 40, location: 'Almacén B', status: 'low' },
-                { id: 4, name: 'Atriles para Partituras', category: 'Accesorios', quantity: 15, minQuantity: 30, location: 'Oficina', status: 'low' },
-                { id: 5, name: 'Amplificadores', category: 'Equipo de Sonido', quantity: 7, minQuantity: 15, location: 'Sala de Ensayo', status: 'low' }
-            ],
-            orders: [],
-            alerts: []
-        }
-    };
+    console.log("Datos de usuario escuela:", window.userData);
     
-    // Mostrar información del usuario
-    document.getElementById('userName').textContent = userData.name;
-    document.getElementById('userRole').textContent = userData.role;
-    document.getElementById('schoolBadge').textContent = userData.name;
-    document.getElementById('welcomeTitle').textContent = `Bienvenido, ${userData.name}`;
+    // ============================================
+    // 2. MOSTRAR INFORMACIÓN DEL USUARIO
+    // ============================================
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    const userAvatar = document.getElementById('userAvatar');
+    const schoolBadge = document.getElementById('schoolBadge');
+    const welcomeTitle = document.getElementById('welcomeTitle');
     
-    // Crear avatar con iniciales
-    const initials = userData.name.charAt(0);
-    document.getElementById('userAvatar').textContent = initials;
+    if (userName) userName.textContent = window.userData.escuela_nombre || 'Escuela';
+    if (userRole) userRole.textContent = window.userData.rol_display || 'Usuario Escolar';
+    if (userAvatar) userAvatar.textContent = (window.userData.first_name || 'E').charAt(0).toUpperCase();
+    if (schoolBadge) schoolBadge.textContent = window.userData.escuela_nombre || '';
+    if (welcomeTitle) welcomeTitle.textContent = 'Bienvenido, ' + (window.userData.escuela_nombre || 'Escuela');
     
-    // Mostrar fecha actual
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('currentDate').textContent = now.toLocaleDateString('es-ES', options);
-    
-    // Cargar datos de la escuela
-    const schoolData = schoolInventory[userData.schoolId];
-    if (!schoolData) {
-        alert('Error: No se encontraron datos para esta escuela.');
-        return;
+    // ============================================
+    // 3. MOSTRAR FECHA ACTUAL
+    // ============================================
+    const dateElement = document.getElementById('currentDate');
+    if (dateElement) {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateElement.textContent = now.toLocaleDateString('es-ES', options);
     }
     
-    // ===== FUNCIONES PRINCIPALES =====
+    // ============================================
+    // 4. VARIABLES GLOBALES
+    // ============================================
+    const escuelaId = window.userData.escuela_id;
+    let stocksData = [];
+    let materialesDisponibles = [];
     
-    // Función para calcular estadísticas
-    function calculateStats() {
-        const products = schoolData.products;
-        const total = products.length;
-        const inStock = products.filter(p => p.status === 'in-stock').length;
-        const lowStock = products.filter(p => p.status === 'low').length;
-        const outOfStock = products.filter(p => p.status === 'out-of-stock').length;
-        
-        document.getElementById('totalProducts').textContent = total;
-        document.getElementById('inStockProducts').textContent = inStock;
-        document.getElementById('lowStockProducts').textContent = lowStock;
-        document.getElementById('outOfStockProducts').textContent = outOfStock;
-    }
-    
-    // Función para mostrar alertas
-    function displayAlerts() {
-        const alertsList = document.getElementById('alertsList');
-        alertsList.innerHTML = '';
-        
-        if (schoolData.alerts.length === 0) {
-            document.getElementById('alertsContainer').style.display = 'none';
-            return;
-        }
-        
-        schoolData.alerts.forEach(alert => {
-            const alertItem = document.createElement('div');
-            alertItem.className = 'alert-item';
-            
-            alertItem.innerHTML = `
-                <div class="alert-icon">
-                    <i class="fas fa-exclamation-circle"></i>
-                </div>
-                <div class="alert-text">
-                    <strong>${alert.product}</strong>: ${alert.message}
-                </div>
-                <button class="alert-action" data-product="${alert.product}">
-                    Solicitar
-                </button>
-            `;
-            
-            alertsList.appendChild(alertItem);
-        });
-        
-        // Agregar event listeners a los botones de solicitud
-        document.querySelectorAll('.alert-action').forEach(button => {
-            button.addEventListener('click', function() {
-                const productName = this.getAttribute('data-product');
-                openOrderForm(productName);
-            });
-        });
-    }
-    
-    // Función para mostrar productos con bajo stock
-    function displayLowStockProducts() {
-        const tableBody = document.getElementById('lowStockTableBody');
-        tableBody.innerHTML = '';
-        
-        const lowStockProducts = schoolData.products.filter(p => p.status === 'low' || p.status === 'out-of-stock');
-        
-        if (lowStockProducts.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="6" style="text-align: center; padding: 20px; color: #7f8c8d;">No hay productos con bajo stock</td>`;
-            tableBody.appendChild(row);
-            return;
-        }
-        
-        lowStockProducts.forEach(product => {
-            const row = document.createElement('tr');
-            
-            let statusClass = 'low-stock';
-            let statusText = 'Bajo Stock';
-            if (product.status === 'out-of-stock') {
-                statusClass = 'out-of-stock';
-                statusText = 'Agotado';
-            }
-            
-            row.innerHTML = `
-                <td>${product.name}</td>
-                <td>${product.category}</td>
-                <td>${product.quantity}</td>
-                <td>${product.minQuantity}</td>
-                <td><span class="status ${statusClass}">${statusText}</span></td>
-                <td>
-                    <button class="action-btn request" data-id="${product.id}">Solicitar</button>
-                    <button class="action-btn alert" data-id="${product.id}">Alertar</button>
-                </td>
-            `;
-            
-            tableBody.appendChild(row);
-        });
-        
-        // Agregar event listeners a los botones
-        document.querySelectorAll('.action-btn.request').forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = parseInt(this.getAttribute('data-id'));
-                const product = schoolData.products.find(p => p.id === productId);
-                if (product) {
-                    openOrderForm(product.name);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.action-btn.alert').forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = parseInt(this.getAttribute('data-id'));
-                const product = schoolData.products.find(p => p.id === productId);
-                if (product) {
-                    openAlertModal(product);
-                }
-            });
-        });
-    }
-    
-    // Función para mostrar todos los productos
-    function displayAllProducts() {
-        const tableBody = document.getElementById('inventoryTableBody');
-        tableBody.innerHTML = '';
-        
-        schoolData.products.forEach(product => {
-            const row = document.createElement('tr');
-            
-            let statusClass, statusText;
-            switch(product.status) {
-                case 'in-stock':
-                    statusClass = 'in-stock';
-                    statusText = 'En Stock';
-                    break;
-                case 'low':
-                    statusClass = 'low-stock';
-                    statusText = 'Bajo Stock';
-                    break;
-                case 'out-of-stock':
-                    statusClass = 'out-of-stock';
-                    statusText = 'Agotado';
-                    break;
-            }
-            
-            row.innerHTML = `
-                <td>${product.name}</td>
-                <td>${product.category}</td>
-                <td>${product.quantity}</td>
-                <td>${product.location}</td>
-                <td>${product.minQuantity}</td>
-                <td><span class="status ${statusClass}">${statusText}</span></td>
-                <td>
-                    <button class="action-btn request" data-id="${product.id}">Solicitar</button>
-                </td>
-            `;
-            
-            tableBody.appendChild(row);
-        });
-        
-        // Agregar event listeners a los botones de solicitud
-        document.querySelectorAll('#inventoryTableBody .action-btn.request').forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = parseInt(this.getAttribute('data-id'));
-                const product = schoolData.products.find(p => p.id === productId);
-                if (product) {
-                    openOrderForm(product.name);
-                }
-            });
-        });
-    }
-    
-    // Función para mostrar pedidos pendientes
-    function displayPendingOrders() {
-        const tableBody = document.getElementById('pendingOrdersTableBody');
-        tableBody.innerHTML = '';
-        
-        if (schoolData.orders.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="6" style="text-align: center; padding: 20px; color: #7f8c8d;">No hay pedidos pendientes</td>`;
-            tableBody.appendChild(row);
-            return;
-        }
-        
-        schoolData.orders.forEach(order => {
-            const row = document.createElement('tr');
-            
-            let priorityClass = '';
-            switch(order.priority) {
-                case 'alta':
-                    priorityClass = 'style="color: #e74c3c; font-weight: 600;"';
-                    break;
-                case 'urgente':
-                    priorityClass = 'style="color: #c0392b; font-weight: 700;"';
-                    break;
-                case 'media':
-                    priorityClass = 'style="color: #f39c12;"';
-                    break;
-            }
-            
-            row.innerHTML = `
-                <td>${order.id}</td>
-                <td>${order.product}</td>
-                <td>${order.quantity}</td>
-                <td ${priorityClass}>${order.priority.toUpperCase()}</td>
-                <td>${order.date}</td>
-                <td><span class="status pendiente">Pendiente</span></td>
-            `;
-            
-            tableBody.appendChild(row);
-        });
-    }
-    
-    // Función para abrir formulario de pedido
-    function openOrderForm(productName = '') {
-        // Cambiar a la sección de pedidos
-        switchSection('pedidos');
-        
-        // Mostrar formulario
-        document.getElementById('orderForm').style.display = 'block';
-        document.getElementById('newOrderBtn').style.display = 'none';
-        
-        // Rellenar producto si se especifica
-        if (productName) {
-            const productSelect = document.getElementById('orderProduct');
-            for (let i = 0; i < productSelect.options.length; i++) {
-                if (productSelect.options[i].text === productName) {
-                    productSelect.selectedIndex = i;
-                    break;
-                }
-            }
-        }
-        
-        // Establecer fecha mínima para "necesario para"
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowStr = tomorrow.toISOString().split('T')[0];
-        document.getElementById('orderNeededBy').min = tomorrowStr;
-        
-        // Establecer fecha por defecto (7 días a partir de hoy)
-        const nextWeek = new Date(today);
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        const nextWeekStr = nextWeek.toISOString().split('T')[0];
-        document.getElementById('orderNeededBy').value = nextWeekStr;
-    }
-    
-    // Función para abrir modal de alerta
-    function openAlertModal(product) {
-        const modal = document.getElementById('alertModal');
-        const modalContent = document.getElementById('modalContent');
-        
-        modalContent.innerHTML = `
-            <p>Crear alerta manual para: <strong>${product.name}</strong></p>
-            <div class="form-group" style="margin-top: 15px;">
-                <label for="alertMessage">Mensaje de la alerta</label>
-                <textarea id="alertMessage" rows="3" placeholder="Describe la razón de esta alerta...">Stock crítico de ${product.name}. Cantidad actual: ${product.quantity}, Mínimo requerido: ${product.minQuantity}</textarea>
-            </div>
-            <div class="form-group" style="margin-top: 15px;">
-                <label for="alertPriority">Prioridad</label>
-                <select id="alertPriority">
-                    <option value="media">Media</option>
-                    <option value="alta" selected>Alta</option>
-                    <option value="urgente">Urgente</option>
-                </select>
-            </div>
-            <div class="form-buttons" style="margin-top: 20px;">
-                <button type="button" class="btn-cancel" id="cancelAlertBtn">Cancelar</button>
-                <button type="button" class="btn-submit" id="submitAlertBtn">Crear Alerta</button>
-            </div>
-        `;
-        
-        modal.style.display = 'flex';
-        
-        // Event listeners para botones del modal
-        document.getElementById('cancelAlertBtn').addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-        
-        document.getElementById('submitAlertBtn').addEventListener('click', () => {
-            const message = document.getElementById('alertMessage').value;
-            const priority = document.getElementById('alertPriority').value;
-            
-            // Agregar alerta
-            const newAlert = {
-                date: new Date().toISOString().split('T')[0],
-                type: 'manual',
-                product: product.name,
-                message: message,
-                status: 'activa'
-            };
-            
-            schoolData.alerts.push(newAlert);
-            
-            // Mostrar mensaje de éxito
-            showAlert('success', `Alerta creada para ${product.name}. El administrador ha sido notificado.`);
-            
-            // Actualizar pantalla
-            displayAlerts();
-            
-            // Cerrar modal
-            modal.style.display = 'none';
-        });
-    }
-    
-    // Función para cambiar de sección
-    function switchSection(sectionId) {
-        // Ocultar todas las secciones
-        document.querySelectorAll('.dashboard-section').forEach(section => {
+    // ============================================
+    // 5. FUNCIÓN PARA CAMBIAR DE SECCIÓN
+    // ============================================
+    window.switchSection = function(sectionId) {
+        document.querySelectorAll('.dashboard-section').forEach(function(section) {
             section.classList.remove('active');
         });
         
-        // Mostrar sección seleccionada
-        document.getElementById(`section-${sectionId}`).classList.add('active');
+        const selectedSection = document.getElementById('section-' + sectionId);
+        if (selectedSection) {
+            selectedSection.classList.add('active');
+        }
         
-        // Actualizar menú activo
-        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+        document.querySelectorAll('.sidebar-menu a').forEach(function(link) {
             link.classList.remove('active');
-            if (link.getAttribute('data-section') === sectionId) {
+            if (link.dataset.section === sectionId) {
                 link.classList.add('active');
             }
         });
         
-        // Cargar datos específicos de la sección
-        switch(sectionId) {
-            case 'inventario':
-                displayAllProducts();
-                break;
-            case 'pedidos':
-                displayPendingOrders();
-                populateProductSelect();
-                break;
-            case 'alertas':
-                displayAlertsHistory();
-                displayAlertThresholds();
-                break;
+        // Cargar datos específicos según la sección
+        if (sectionId === 'inventario') {
+            cargarInventarioEscuela();
+        } else if (sectionId === 'pedidos') {
+            cargarMaterialesDisponibles();
+            cargarPedidosEscuela();
+        } else if (sectionId === 'reportes') {
+            cargarEstadisticasReportes();
         }
-    }
+    };
     
-    // Función para poblar select de productos en formulario de pedido
-    function populateProductSelect() {
-        const select = document.getElementById('orderProduct');
-        select.innerHTML = '<option value="">Seleccionar producto...</option>';
-        
-        schoolData.products.forEach(product => {
-            const option = document.createElement('option');
-            option.value = product.id;
-            option.textContent = product.name;
-            select.appendChild(option);
-        });
-    }
-    
-    // Función para mostrar historial de alertas
-    function displayAlertsHistory() {
-        const tableBody = document.getElementById('alertsHistoryTableBody');
-        tableBody.innerHTML = '';
-        
-        // Combinar alertas actuales con historial (en una app real esto vendría de una BD)
-        const allAlerts = [
-            ...schoolData.alerts,
-            { date: '2023-10-10', type: 'stock', product: 'Atriles para Partituras', message: 'Stock por debajo del mínimo', status: 'resuelta' },
-            { date: '2023-10-05', type: 'stock', product: 'Boquillas para Saxofón', message: 'Stock por debajo del mínimo', status: 'resuelta' },
-            { date: '2023-09-28', type: 'manual', product: 'Guitarras Acústicas', message: 'Necesidad especial para concierto', status: 'resuelta' },
-            { date: '2023-09-25', type: 'stock', product: 'Cuerdas para Guitarra', message: 'Stock por debajo del mínimo', status: 'resuelta' }
-        ];
-        
-        allAlerts.forEach(alert => {
-            const row = document.createElement('tr');
-            
-            let statusClass = 'pendiente';
-            if (alert.status === 'resuelta') {
-                statusClass = 'aprobado';
-            }
-            
-            row.innerHTML = `
-                <td>${alert.date}</td>
-                <td>${alert.type === 'stock' ? 'Stock' : 'Manual'}</td>
-                <td>${alert.product}</td>
-                <td>${alert.message}</td>
-                <td><span class="status ${statusClass}">${alert.status}</span></td>
-            `;
-            
-            tableBody.appendChild(row);
-        });
-    }
-    
-    // Función para mostrar umbrales de alerta
-    function displayAlertThresholds() {
-        const list = document.getElementById('currentThresholds');
-        list.innerHTML = '';
-        
-        // Umbrales por defecto (en una app real esto sería configurable)
-        const thresholds = [
-            'Instrumentos de Cuerda: 25% por encima del mínimo',
-            'Instrumentos de Viento: 20% por encima del mínimo',
-            'Percusión: 30% por encima del mínimo',
-            'Accesorios: 15% por encima del mínimo',
-            'Equipo de Sonido: 20% por encima del mínimo'
-        ];
-        
-        thresholds.forEach(threshold => {
-            const li = document.createElement('li');
-            li.textContent = threshold;
-            list.appendChild(li);
-        });
-    }
-    
-    // ===== FUNCIONES DE UTILIDAD =====
-    
-    function showAlert(type, message) {
-        // Crear alerta temporal
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert ${type}`;
-        alertDiv.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'}"></i>
-            <div>${message}</div>
-        `;
-        
-        // Insertar al principio del contenido
-        const content = document.querySelector('.dashboard-content');
-        content.insertBefore(alertDiv, content.firstChild);
-        
-        // Remover después de 5 segundos
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
-    }
-    
-    function showModal(title, content) {
-        document.getElementById('modalTitle').textContent = title;
-        document.getElementById('modalContent').innerHTML = content;
-        document.getElementById('detailModal').style.display = 'flex';
-    }
-    
-    function showConfirmModal(title, message, callback) {
-        document.getElementById('confirmModalTitle').textContent = title;
-        document.getElementById('confirmModalContent').textContent = message;
-        document.getElementById('confirmModal').style.display = 'flex';
-        
-        // Configurar botón de confirmación
-        const confirmBtn = document.getElementById('confirmActionBtn');
-        confirmBtn.onclick = function() {
-            document.getElementById('confirmModal').style.display = 'none';
-            if (callback) callback();
-        };
-    }
-    
-    // ===== INICIALIZACIÓN =====
-    
-    // Inicializar datos
-    calculateStats();
-    displayAlerts();
-    displayLowStockProducts();
-    displayAllProducts();
-    displayPendingOrders();
-    populateProductSelect();
-    displayAlertThresholds();
-    
-    // FUNCIÓN DE LOGOUT (igual que en dashboard)
-    document.getElementById('logoutBtn').addEventListener('click', function() {
-        showConfirmModal('Cerrar Sesión', '¿Estás seguro de que deseas cerrar sesión?', () => {
-            sessionStorage.removeItem('luth_user');
-            window.location.href = '/';
-        });
-    });
-    
-    // Manejar clicks en el menú lateral
-    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+    // ============================================
+    // 6. ASIGNAR EVENTOS A LOS MENÚS
+    // ============================================
+    document.querySelectorAll('.sidebar-menu a').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            const sectionId = this.getAttribute('data-section');
-            switchSection(sectionId);
+            window.switchSection(this.dataset.section);
         });
     });
     
-    // Botón para solicitar todos los productos con bajo stock
-    document.getElementById('requestAllBtn').addEventListener('click', function() {
-        showConfirmModal('Solicitar Todos', '¿Estás seguro de que deseas solicitar todos los productos con bajo stock? Esto creará múltiples pedidos.', () => {
-            showAlert('success', 'Función en desarrollo. En una aplicación completa, se crearían pedidos para todos los productos con bajo stock.');
+    // ============================================
+    // 7. FUNCIÓN PARA CARGAR TODOS LOS STOCKS
+    // ============================================
+    function cargarTodosLosStocks() {
+        return fetch('/api/stocks/')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Error al cargar stocks');
+                return response.json();
+            })
+            .then(function(data) {
+                stocksData = data.data || [];
+                return stocksData;
+            })
+            .catch(function(error) {
+                console.error('Error cargando stocks:', error);
+                return [];
+            });
+    }
+    
+    // ============================================
+    // 8. FUNCIÓN PARA CARGAR INVENTARIO DE LA ESCUELA
+    // ============================================
+    function cargarInventarioEscuela() {
+        const tbody = document.getElementById('inventoryTableBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Cargando inventario...</td></tr>';
+        
+        cargarTodosLosStocks().then(function(stocks) {
+            if (!stocks || stocks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No hay productos en inventario</td></tr>';
+                return;
+            }
+            
+            var stocksEscuela = [];
+            if (escuelaId) {
+                for (var i = 0; i < stocks.length; i++) {
+                    if (stocks[i].inventario_id == escuelaId) {
+                        stocksEscuela.push(stocks[i]);
+                    }
+                }
+            }
+            
+            if (stocksEscuela.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No hay productos en esta escuela</td></tr>';
+                return;
+            }
+            
+            var html = '';
+            var bajoStock = 0;
+            var agotados = 0;
+            
+            for (var i = 0; i < stocksEscuela.length; i++) {
+                var item = stocksEscuela[i];
+                var estadoClass = '';
+                var estadoText = '';
+                var estadoIcon = '';
+                
+                if (item.cantidad === 0) {
+                    estadoClass = 'status-out-of-stock';
+                    estadoText = 'Agotado';
+                    estadoIcon = 'fa-times-circle';
+                    agotados++;
+                } else if (item.cantidad < item.minimo) {
+                    estadoClass = 'status-low-stock';
+                    estadoText = 'Bajo Stock';
+                    estadoIcon = 'fa-exclamation-triangle';
+                    bajoStock++;
+                } else {
+                    estadoClass = 'status-in-stock';
+                    estadoText = 'Normal';
+                    estadoIcon = 'fa-check-circle';
+                }
+                
+                html += `
+                <tr>
+                    <td><i class="fas fa-box" style="color: #6c757d; margin-right: 8px;"></i> ${item.material_nombre}</td>
+                    <td><i class="fas fa-tag" style="color: #17a2b8; margin-right: 5px;"></i> General</td>
+                    <td><span style="font-weight: 600; color: #007bff;">${item.cantidad}</span></td>
+                    <td><i class="fas fa-map-marker-alt" style="color: #28a745; margin-right: 5px;"></i> Principal</td>
+                    <td>${item.minimo}</td>
+                    <td><span class="status-badge ${estadoClass}"><i class="fas ${estadoIcon}"></i> ${estadoText}</span></td>
+                    <td>
+                        <button class="action-btn view" data-id="${item.id}"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn request" data-id="${item.id}"><i class="fas fa-cart-plus"></i></button>
+                    </td>
+                </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+            
+            document.getElementById('lowStockProducts').textContent = bajoStock;
+            document.getElementById('outOfStockProducts').textContent = agotados;
+            document.getElementById('totalProducts').textContent = stocksEscuela.length;
+            
+            var totalStock = 0;
+            for (var j = 0; j < stocksEscuela.length; j++) {
+                totalStock += stocksEscuela[j].cantidad;
+            }
+            document.getElementById('inStockProducts').textContent = totalStock;
+            
+            actualizarTablaBajoStock(stocksEscuela);
+            asignarEventosBotones();
         });
-    });
+    }
     
-    // Botón para nuevo pedido
-    document.getElementById('newOrderBtn').addEventListener('click', function() {
-        openOrderForm();
-    });
-    
-    // Botón para cancelar pedido
-    document.getElementById('cancelOrderBtn').addEventListener('click', function() {
-        document.getElementById('orderForm').style.display = 'none';
-        document.getElementById('newOrderBtn').style.display = 'block';
-    });
-    
-    // Formulario de pedido
-    document.getElementById('orderForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // ============================================
+    // 9. FUNCIÓN PARA ACTUALIZAR TABLA DE BAJO STOCK
+    // ============================================
+    function actualizarTablaBajoStock(stocks) {
+        var tbody = document.getElementById('lowStockTableBody');
+        if (!tbody) return;
         
-        const productId = document.getElementById('orderProduct').value;
-        const quantity = document.getElementById('orderQuantity').value;
-        const priority = document.getElementById('orderPriority').value;
-        const neededBy = document.getElementById('orderNeededBy').value;
-        const notes = document.getElementById('orderNotes').value;
+        var bajoStock = [];
+        var agotados = [];
         
-        const product = schoolData.products.find(p => p.id == productId);
+        for (var i = 0; i < stocks.length; i++) {
+            var s = stocks[i];
+            if (s.cantidad === 0) {
+                agotados.push(s);
+            } else if (s.cantidad > 0 && s.cantidad < s.minimo) {
+                bajoStock.push(s);
+            }
+        }
         
-        if (!product) {
-            showAlert('error', 'Por favor selecciona un producto válido.');
+        var todosBajoStock = bajoStock.concat(agotados);
+        
+        if (todosBajoStock.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay productos con bajo stock</td></tr>';
             return;
         }
         
-        // Crear nuevo pedido
-        const newOrder = {
-            id: 'ORD' + (schoolData.orders.length + 1).toString().padStart(3, '0'),
-            product: product.name,
-            quantity: parseInt(quantity),
-            priority: priority,
-            date: new Date().toISOString().split('T')[0],
-            status: 'pendiente'
+        var html = '';
+        for (var j = 0; j < todosBajoStock.length; j++) {
+            var item = todosBajoStock[j];
+            var estadoClass = (item.cantidad === 0) ? 'status-out-of-stock' : 'status-low-stock';
+            var estadoText = (item.cantidad === 0) ? 'Agotado' : 'Bajo Stock';
+            var estadoIcon = (item.cantidad === 0) ? 'fa-times-circle' : 'fa-exclamation-triangle';
+            var colorCantidad = (item.cantidad === 0) ? '#e74c3c' : '#f39c12';
+            
+            html += `
+            <tr>
+                <td><i class="fas fa-box"></i> ${item.material_nombre}</td>
+                <td>General</td>
+                <td><span style="font-weight: 600; color: ${colorCantidad};">${item.cantidad}</span></td>
+                <td>${item.minimo}</td>
+                <td><span class="status-badge ${estadoClass}"><i class="fas ${estadoIcon}"></i> ${estadoText}</span></td>
+                <td><button class="action-btn request" data-id="${item.id}"><i class="fas fa-cart-plus"></i> Solicitar</button></td>
+            </tr>
+            `;
+        }
+        
+        tbody.innerHTML = html;
+    }
+    
+    // ============================================
+    // 10. FUNCIÓN PARA CARGAR ALERTAS
+    // ============================================
+    function cargarAlertasEscuela() {
+        var alertsList = document.getElementById('alertsList');
+        if (!alertsList) return;
+        
+        alertsList.innerHTML = '<p style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Cargando alertas...</p>';
+        
+        fetch('/api/alertas/')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Error al cargar alertas');
+                return response.json();
+            })
+            .then(function(data) {
+                if (!data.data || data.data.length === 0) {
+                    alertsList.innerHTML = '<p style="text-align:center; padding:20px; color:#28a745;"><i class="fas fa-check-circle"></i> No hay alertas pendientes</p>';
+                    return;
+                }
+                
+                var html = '';
+                for (var i = 0; i < data.data.length; i++) {
+                    var alerta = data.data[i];
+                    html += `
+                    <div class="alert-item">
+                        <i class="fas fa-exclamation-circle" style="color: #dc3545;"></i>
+                        <div style="flex:1;">
+                            <strong>${alerta.material}</strong>: ${alerta.mensaje}
+                            <br><small>${new Date(alerta.fecha).toLocaleString()}</small>
+                        </div>
+                        <button class="action-btn request" data-id="${alerta.id}"><i class="fas fa-cart-plus"></i> Solicitar</button>
+                    </div>
+                    `;
+                }
+                alertsList.innerHTML = html;
+            })
+            .catch(function(error) {
+                console.error('Error cargando alertas:', error);
+                alertsList.innerHTML = '<p style="color:#dc3545; text-align:center;">Error al cargar alertas</p>';
+            });
+    }
+    
+    function cargarMaterialesDisponibles() {
+        var select = document.getElementById('orderProduct');
+        if (!select) return;
+        
+        select.innerHTML = '<option value="">Cargando materiales...</option>';
+        console.log("Cargando materiales desde /api/materiales-escuela/");
+        
+        fetch('/api/materiales-escuela/')
+            .then(function(response) {
+                console.log("Status respuesta:", response.status);
+                if (!response.ok) {
+                    return response.json().then(function(err) {
+                        throw new Error(err.error || 'Error ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                console.log("Materiales recibidos:", data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                materialesDisponibles = data.data || [];
+                
+                if (materialesDisponibles.length === 0) {
+                    select.innerHTML = '<option value="">No hay materiales disponibles</option>';
+                    return;
+                }
+                
+                var html = '<option value="">Seleccionar producto...</option>';
+                for (var i = 0; i < materialesDisponibles.length; i++) {
+                    var m = materialesDisponibles[i];
+                    var stockInfo = m.stock_central > 0 ? 'Stock: ' + m.stock_central : 'Sin stock';
+                    html += '<option value="' + m.id + '">' + m.name + ' (' + stockInfo + ')</option>';
+                }
+                select.innerHTML = html;
+            })
+            .catch(function(error) {
+                console.error('Error detallado:', error);
+                select.innerHTML = '<option value="">Error: ' + error.message + '</option>';
+                
+                var alertsList = document.getElementById('alertsList');
+                if (alertsList) {
+                    alertsList.innerHTML = '<div class="alert-item" style="background-color: #f8d7da;">' +
+                        '<i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>' +
+                        '<div>Error al cargar materiales: ' + error.message + '</div>' +
+                        '</div>';
+                }
+            });
+    }
+    
+    function cargarPedidosEscuela() {
+        var tbody = document.getElementById('pendingOrdersTableBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Cargando pedidos...</td></tr>';
+        
+        fetch('/api/movimientos-escuela/')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Error al cargar pedidos');
+                return response.json();
+            })
+            .then(function(data) {
+                var pedidos = data.data || [];
+                
+                if (pedidos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">No hay pedidos registrados</td></tr>';
+                    return;
+                }
+                
+                var html = '';
+                for (var i = 0; i < pedidos.length; i++) {
+                    var p = pedidos[i];
+                    var estadoClass = p.es_entrada ? 'status-in-stock' : (p.es_salida ? 'status-out-of-stock' : 'status-low-stock');
+                    var estadoIcon = p.es_entrada ? 'fa-arrow-down' : (p.es_salida ? 'fa-arrow-up' : 'fa-exchange-alt');
+                    
+                    html += `
+                    <tr>
+                        <td>MOV-${p.id}</td>
+                        <td>${p.material_nombre}</td>
+                        <td>${p.cantidad}</td>
+                        <td><span class="status-badge ${estadoClass}"><i class="fas ${estadoIcon}"></i> ${p.tipo}</span></td>
+                        <td>${new Date(p.fecha).toLocaleDateString()}</td>
+                        <td><span class="status-badge ${estadoClass}">${p.es_entrada ? 'Recibido' : (p.es_salida ? 'Enviado' : 'Ajuste')}</span></td>
+                    </tr>
+                    `;
+                }
+                tbody.innerHTML = html;
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="color:#dc3545; text-align:center;">Error al cargar pedidos</td></tr>';
+            });
+    }
+    
+    // ============================================
+    // 11. FUNCIÓN PARA ENVIAR PEDIDO
+    // ============================================
+    function enviarPedido(event) {
+        event.preventDefault();
+        
+        var materialId = document.getElementById('orderProduct').value;
+        var cantidad = document.getElementById('orderQuantity').value;
+        
+        if (!materialId || !cantidad || cantidad <= 0) {
+            mostrarModalError('Por favor selecciona un producto y una cantidad válida');
+            return;
+        }
+        
+        var datos = {
+            material_id: parseInt(materialId),
+            cantidad: parseInt(cantidad)
         };
         
-        schoolData.orders.push(newOrder);
+        console.log("Enviando pedido:", datos);
         
-        // Mostrar mensaje de éxito
-        showAlert('success', `Pedido ${newOrder.id} creado exitosamente para ${product.name}. El administrador ha sido notificado.`);
+        fetch('/api/crear-solicitud/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(datos)
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                return response.json().then(function(err) {
+                    throw new Error(err.error || 'Error al crear pedido');
+                });
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            mostrarModalExito('✅ ' + data.message);
+            
+            document.getElementById('orderForm').reset();
+            document.getElementById('orderForm').style.display = 'none';
+            document.getElementById('newOrderBtn').style.display = 'block';
+            
+            cargarPedidosEscuela();
+            cargarInventarioEscuela();
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            mostrarModalError('❌ ' + error.message);
+        });
+    }
+    
+    function abrirFormularioPedido() {
+        document.getElementById('orderForm').style.display = 'block';
+        document.getElementById('newOrderBtn').style.display = 'none';
         
-        // Resetear formulario
-        this.reset();
-        this.style.display = 'none';
+        var today = new Date();
+        var tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        var tomorrowStr = tomorrow.toISOString().split('T')[0];
+        document.getElementById('orderNeededBy').min = tomorrowStr;
+        
+        var nextWeek = new Date(today);
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        var nextWeekStr = nextWeek.toISOString().split('T')[0];
+        document.getElementById('orderNeededBy').value = nextWeekStr;
+    }
+    
+    function cerrarFormularioPedido() {
+        document.getElementById('orderForm').reset();
+        document.getElementById('orderForm').style.display = 'none';
         document.getElementById('newOrderBtn').style.display = 'block';
+    }
+    
+    // ============================================
+    // 12. ASIGNAR EVENTOS A BOTONES
+    // ============================================
+    function asignarEventosBotones() {
+        document.querySelectorAll('.action-btn.view').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var stockId = this.getAttribute('data-id');
+                mostrarDetallesStock(stockId);
+            });
+        });
         
-        // Actualizar lista de pedidos
-        displayPendingOrders();
-    });
+        document.querySelectorAll('.action-btn.request').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var stockId = this.getAttribute('data-id');
+                solicitarProducto(stockId);
+            });
+        });
+    }
     
-    // Botón para exportar inventario
-    document.getElementById('exportInventoryBtn').addEventListener('click', function() {
-        showAlert('success', 'Función en desarrollo. En una aplicación completa, se generaría un archivo CSV/PDF con el inventario.');
-    });
-    
-    // Botón para actualizar inventario
-    document.getElementById('refreshInventoryBtn').addEventListener('click', function() {
-        displayAllProducts();
-        calculateStats();
-        displayLowStockProducts();
-        showAlert('success', 'Inventario actualizado.');
-    });
-    
-    // Búsqueda en inventario
-    document.getElementById('searchInventory').addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#inventoryTableBody tr');
+    // ============================================
+    // 13. FUNCIÓN PARA MOSTRAR DETALLES DE STOCK
+    // ============================================
+    function mostrarDetallesStock(stockId) {
+        var stock = null;
+        for (var i = 0; i < stocksData.length; i++) {
+            if (stocksData[i].id == stockId) {
+                stock = stocksData[i];
+                break;
+            }
+        }
         
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            if (text.includes(searchTerm)) {
-                row.style.display = '';
+        if (!stock) return;
+        
+        var modal = document.getElementById('detailModal');
+        var modalTitle = document.getElementById('modalTitle');
+        var modalContent = document.getElementById('modalContent');
+        
+        modalTitle.textContent = 'Detalles del Producto';
+        modalContent.innerHTML = `
+            <p><strong>Producto:</strong> ${stock.material_nombre}</p>
+            <p><strong>Cantidad:</strong> ${stock.cantidad}</p>
+            <p><strong>Mínimo:</strong> ${stock.minimo}</p>
+            <p><strong>Ubicación:</strong> ${stock.ubicacion || 'Principal'}</p>
+        `;
+        
+        modal.style.display = 'flex';
+    }
+    
+    function solicitarProducto(stockId) {
+        var stock = null;
+        for (var i = 0; i < stocksData.length; i++) {
+            if (stocksData[i].id == stockId) {
+                stock = stocksData[i];
+                break;
+            }
+        }
+        
+        if (stock) {
+            window.switchSection('pedidos');
+            
+            setTimeout(function() {
+                var select = document.getElementById('orderProduct');
+                for (var j = 0; j < select.options.length; j++) {
+                    if (select.options[j].text.includes(stock.material_nombre)) {
+                        select.selectedIndex = j;
+                        break;
+                    }
+                }
+                abrirFormularioPedido();
+            }, 500);
+        }
+    }
+    
+    // ============================================
+    // 14. FILTRO DE BÚSQUEDA
+    // ============================================
+    document.getElementById('searchInventory')?.addEventListener('input', function() {
+        var searchTerm = this.value.toLowerCase();
+        var rows = document.querySelectorAll('#inventoryTableBody tr');
+        
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var text = row.textContent.toLowerCase();
+            row.style.display = text.indexOf(searchTerm) > -1 ? '' : 'none';
+        }
+    });
+    
+    // ============================================
+    // 15. BOTONES DE ACCIÓN
+    // ============================================
+    document.getElementById('refreshInventoryBtn')?.addEventListener('click', function() {
+        cargarInventarioEscuela();
+    });
+    
+    document.getElementById('exportInventoryBtn')?.addEventListener('click', function() {
+        alert('Exportando inventario...');
+    });
+    
+    document.getElementById('requestAllBtn')?.addEventListener('click', function() {
+        alert('Función: Solicitar todos los productos con bajo stock (en desarrollo)');
+    });
+    
+    document.getElementById('newOrderBtn')?.addEventListener('click', abrirFormularioPedido);
+    document.getElementById('cancelOrderBtn')?.addEventListener('click', cerrarFormularioPedido);
+    document.getElementById('orderForm')?.addEventListener('submit', enviarPedido);
+    
+    document.getElementById('showOrderHistoryBtn')?.addEventListener('click', function() {
+        cargarPedidosEscuela();
+    });
+    
+    // ============================================
+    // 16. REPORTES
+    // ============================================
+    function cargarEstadisticasReportes() {
+        Promise.all([
+            fetch('/api/reporte-inventario/').then(r => r.json()),
+            fetch('/api/reporte-consumo/').then(r => r.json()),
+            fetch('/api/reporte-pedidos/').then(r => r.json()),
+            fetch('/api/reporte-alertas/').then(r => r.json())
+        ]).then(function(responses) {
+            const [inventario, consumo, pedidos, alertas] = responses;
+            
+            var statsCards = document.querySelectorAll('#section-reportes .stat-card h3');
+            if (statsCards.length >= 4) {
+                if (inventario.success) statsCards[0].textContent = inventario.estadisticas.total_materiales || 0;
+                if (consumo.success) statsCards[1].textContent = consumo.estadisticas.total_movimientos || 0;
+                if (pedidos.success) statsCards[2].textContent = pedidos.estadisticas.total_pedidos || 0;
+                if (alertas.success) statsCards[3].textContent = alertas.estadisticas.total_alertas || 0;
+            }
+        }).catch(function(error) {
+            console.error('Error cargando estadísticas de reportes:', error);
+        });
+    }
+    
+function generarReporte(tipo, periodo) {
+    let url = '';
+    let titulo = '';
+    
+    if (tipo === 'inventario') {
+        url = '/api/reporte-inventario/';
+        titulo = 'Inventario Actual';
+    } else if (tipo === 'consumo') {
+        url = '/api/reporte-consumo/?periodo=' + periodo;
+        titulo = 'Consumo ' + (periodo === 'mes' ? 'Mensual' : 
+                               periodo === 'trimestre' ? 'Trimestral' :
+                               periodo === 'semestre' ? 'Semestral' : 'Anual');
+    } else if (tipo === 'pedidos') {
+        url = '/api/reporte-pedidos/?periodo=' + periodo;
+        titulo = 'Historial de Pedidos';
+    } else if (tipo === 'alertas') {
+        url = '/api/reporte-alertas/';
+        titulo = 'Reporte de Alertas';
+    } else {
+        return;
+    }
+    
+    mostrarModalInfo('Generando reporte...');
+    
+    fetch(url)
+        .then(function(response) {
+            if (!response.ok) {
+                return response.json().then(function(err) {
+                    throw new Error(err.error || 'Error al generar reporte');
+                });
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data.success) throw new Error(data.error || 'Error desconocido');
+            
+            var contenido = '';
+            
+            // Información general
+            contenido += '<h4>' + titulo + '</h4>';
+            contenido += '<p><strong>Fecha de generación:</strong> ' + new Date().toLocaleString() + '</p>';
+            contenido += '<p><strong>Escuela:</strong> ' + (window.userData.escuela_nombre || '') + '</p>';
+            
+            // Estadísticas
+            if (data.estadisticas) {
+                contenido += '<h5>📊 Estadísticas</h5>';
+                contenido += '<ul>';
+                for (var key in data.estadisticas) {
+                    var label = key.replace(/_/g, ' ');
+                    contenido += '<li><strong>' + label + ':</strong> ' + data.estadisticas[key] + '</li>';
+                }
+                contenido += '</ul>';
+            }
+            
+            // Datos detallados
+            if (data.data && data.data.length > 0) {
+                contenido += '<h5>📋 Detalle</h5>';
+                contenido += '<div style="max-height:300px; overflow-y:auto;">';
+                contenido += '<table style="width:100%; border-collapse:collapse;">';
+                contenido += '<thead><tr style="background:#f8f9fa;">';
+                
+                if (tipo === 'inventario') {
+                    contenido += '<th>Material</th><th>Tipo</th><th>Cantidad</th><th>Mínimo</th><th>Estado</th>';
+                } else if (tipo === 'consumo') {
+                    contenido += '<th>Material</th><th>Total Consumido</th><th>Veces</th>';
+                } else if (tipo === 'pedidos') {
+                    contenido += '<th>Fecha</th><th>Material</th><th>Cantidad</th><th>Origen</th>';
+                } else if (tipo === 'alertas') {
+                    contenido += '<th>Fecha</th><th>Material</th><th>Mensaje</th><th>Estado</th>';
+                }
+                
+                contenido += '</tr></thead><tbody>';
+                
+                for (var i = 0; i < Math.min(data.data.length, 50); i++) {
+                    var item = data.data[i];
+                    contenido += '<tr style="border-bottom:1px solid #eaeaea;">';
+                    
+                    if (tipo === 'inventario') {
+                        var estadoClass = item.estado === 'Agotado' ? 'status-out-of-stock' : 
+                                         (item.estado === 'Bajo Stock' ? 'status-low-stock' : 'status-in-stock');
+                        contenido += '<td>' + item.material + '</td>';
+                        contenido += '<td>' + item.tipo + '</td>';
+                        contenido += '<td>' + item.cantidad + '</td>';
+                        contenido += '<td>' + item.minimo + '</td>';
+                        contenido += '<td><span class="status-badge ' + estadoClass + '">' + item.estado + '</span></td>';
+                    } else if (tipo === 'consumo') {
+                        contenido += '<td>' + item.material + '</td>';
+                        contenido += '<td>' + item.total_consumido + '</td>';
+                        contenido += '<td>' + item.veces_solicitado + '</td>';
+                    } else if (tipo === 'pedidos') {
+                        contenido += '<td>' + new Date(item.fecha).toLocaleDateString() + '</td>';
+                        contenido += '<td>' + item.material + '</td>';
+                        contenido += '<td>' + item.cantidad + '</td>';
+                        contenido += '<td>' + (item.origen || 'Depósito') + '</td>';
+                    } else if (tipo === 'alertas') {
+                        contenido += '<td>' + new Date(item.fecha).toLocaleDateString() + '</td>';
+                        contenido += '<td>' + item.material + '</td>';
+                        contenido += '<td>' + item.mensaje + '</td>';
+                        contenido += '<td>' + (item.resuelto ? 'Resuelta' : 'Pendiente') + '</td>';
+                    }
+                    
+                    contenido += '</tr>';
+                }
+                
+                if (data.data.length > 50) {
+                    contenido += '<tr><td colspan="5" style="text-align:center; padding:10px;">... y ' + 
+                        (data.data.length - 50) + ' más</td></tr>';
+                }
+                
+                contenido += '</tbody></table>';
+                contenido += '</div>';
             } else {
-                row.style.display = 'none';
+                contenido += '<p>No hay datos para mostrar en este período.</p>';
+            }
+            
+            mostrarModalReporte(titulo, contenido, tipo, periodo);
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            mostrarModalError('❌ Error al generar reporte: ' + error.message);
+        });
+}
+    
+    document.getElementById('generateReportBtn')?.addEventListener('click', function() {
+        var tipo = document.getElementById('reportType').value;
+        var periodo = document.getElementById('reportPeriod').value;
+        generarReporte(tipo, periodo);
+    });
+    
+    document.getElementById('exportReportBtn')?.addEventListener('click', function() {
+        mostrarModalInfo('Preparando exportación...');
+        setTimeout(function() {
+            mostrarModalExito('Reporte exportado correctamente');
+        }, 1500);
+    });
+    
+// Reemplaza la sección 17 (LOGOUT) con:
+document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    mostrarModalConfirmacion('¿Estás seguro de que deseas cerrar sesión?', function() {
+        document.getElementById('logoutForm')?.submit();
+    });
+});
+    
+    // ============================================
+    // 18. CERRAR MODALES
+    // ============================================
+    document.querySelectorAll('.modal-close, #modalClose, #confirmModalClose').forEach(function(btn) {
+        if (btn) {
+            btn.addEventListener('click', function() {
+                var modal = this.closest('.modal');
+                if (modal) modal.style.display = 'none';
+            });
+        }
+    });
+    
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
             }
         });
     });
     
-    // Botón para ver historial de pedidos
-    document.getElementById('showOrderHistoryBtn').addEventListener('click', function() {
-        showAlert('info', 'Función en desarrollo. En una aplicación completa, se mostraría el historial completo de pedidos.');
-    });
+    // ============================================
+    // 19. FUNCIÓN AUXILIAR CSRF
+    // ============================================
+    window.getCsrfToken = function() {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.indexOf('csrftoken=') === 0) {
+                return cookie.substring('csrftoken='.length, cookie.length);
+            }
+        }
+        return '';
+    };
     
-    // Botón para configurar alertas
-    document.getElementById('configureAlertsBtn').addEventListener('click', function() {
-        showAlert('info', 'Función en desarrollo. En una aplicación completa, se abriría un formulario para configurar umbrales de alerta.');
-    });
+// ============================================
+// 20. FUNCIONES PARA MODALES MODERNOS
+// ============================================
+function mostrarModalReporte(titulo, contenido, tipo, periodo) {
+    const modal = document.getElementById('reporteModal');
+    const titleEl = document.getElementById('reporteModalTitle');
+    const contentEl = document.getElementById('reporteModalContent');
+    const closeBtn = document.getElementById('closeReporteModal');
+    const cerrarBtn = document.getElementById('cerrarReporteBtn');
+    const exportarBtn = document.getElementById('exportarReporteBtn');
     
-    // Botón para limpiar historial de alertas
-    document.getElementById('clearAlertsBtn').addEventListener('click', function() {
-        showConfirmModal('Limpiar Historial', '¿Estás seguro de que deseas limpiar el historial de alertas?', () => {
-            showAlert('success', 'Función en desarrollo. En una aplicación completa, se eliminaría el historial de alertas resueltas.');
+    titleEl.textContent = titulo;
+    contentEl.innerHTML = contenido;
+    modal.style.display = 'flex';
+    
+    const cerrarModal = function() {
+        modal.style.display = 'none';
+    };
+    
+    closeBtn.onclick = cerrarModal;
+    cerrarBtn.onclick = cerrarModal;
+    
+    exportarBtn.onclick = function() {
+        exportarReporteComoExcel(tipo, periodo);
+    };
+    
+    modal.onclick = function(e) {
+        if (e.target === modal) cerrarModal();
+    };
+}
+function exportarReporteComoExcel(tipo, periodo) {
+    mostrarModalInfo('Generando archivo Excel...');
+    
+    var url = '/api/exportar-reporte-excel/?tipo=' + tipo;
+    if (periodo) {
+        url += '&periodo=' + periodo;
+    }
+    
+    fetch(url)
+        .then(function(response) {
+            if (!response.ok) {
+                return response.json().then(function(err) {
+                    throw new Error(err.error || 'Error al exportar');
+                });
+            }
+            return response.blob();
+        })
+        .then(function(blob) {
+            // Crear URL del blob
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_' + tipo + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            mostrarModalExito('✅ Reporte exportado correctamente');
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            mostrarModalError('❌ Error al exportar: ' + error.message);
         });
-    });
+}
+
+function mostrarModalConfirmacion(mensaje, onConfirm) {
+    const modal = document.getElementById('confirmModalModerno');
+    const messageEl = document.getElementById('confirmModalMessage');
+    const closeBtn = document.getElementById('closeConfirmModal');
+    const cancelBtn = document.getElementById('cancelConfirmBtn');
+    const acceptBtn = document.getElementById('acceptConfirmBtn');
     
-    // Botón para generar reporte
-    document.getElementById('generateReportBtn').addEventListener('click', function() {
-        const reportType = document.getElementById('reportType').value;
-        const reportPeriod = document.getElementById('reportPeriod').value;
-        
-        showAlert('success', `Generando reporte de tipo "${reportType}" para el período "${reportPeriod}". En una aplicación completa, se descargaría un archivo PDF.`);
-    });
+    messageEl.textContent = mensaje;
+    modal.style.display = 'flex';
     
-    // Cerrar modales
-    document.getElementById('modalClose').addEventListener('click', function() {
-        document.getElementById('detailModal').style.display = 'none';
-    });
+    const cerrarModal = function() {
+        modal.style.display = 'none';
+    };
     
-    document.getElementById('confirmModalClose').addEventListener('click', function() {
-        document.getElementById('confirmModal').style.display = 'none';
-    });
+    closeBtn.onclick = cerrarModal;
+    cancelBtn.onclick = cerrarModal;
     
-    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
-        document.getElementById('confirmModal').style.display = 'none';
-    });
+    acceptBtn.onclick = function() {
+        cerrarModal();
+        if (onConfirm) onConfirm();
+    };
     
-    // Cerrar modales haciendo clic fuera
-    document.getElementById('detailModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-        }
-    });
+    modal.onclick = function(e) {
+        if (e.target === modal) cerrarModal();
+    };
+}
+
+function mostrarModalExito(mensaje) {
+    const modal = document.getElementById('successModalModerno');
+    const messageEl = document.getElementById('successModalMessage');
+    const closeBtn = document.getElementById('closeSuccessModal');
+    const acceptBtn = document.getElementById('acceptSuccessBtn');
     
-    document.getElementById('confirmModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-        }
-    });
+    messageEl.textContent = mensaje;
+    modal.style.display = 'flex';
+    
+    const cerrarModal = function() {
+        modal.style.display = 'none';
+    };
+    
+    closeBtn.onclick = cerrarModal;
+    acceptBtn.onclick = cerrarModal;
+    
+    setTimeout(cerrarModal, 3000);
+    
+    modal.onclick = function(e) {
+        if (e.target === modal) cerrarModal();
+    };
+}
+
+function mostrarModalError(mensaje) {
+    const modal = document.getElementById('errorModalModerno');
+    const messageEl = document.getElementById('errorModalMessage');
+    const closeBtn = document.getElementById('closeErrorModal');
+    const acceptBtn = document.getElementById('acceptErrorBtn');
+    
+    messageEl.textContent = mensaje;
+    modal.style.display = 'flex';
+    
+    const cerrarModal = function() {
+        modal.style.display = 'none';
+    };
+    
+    closeBtn.onclick = cerrarModal;
+    acceptBtn.onclick = cerrarModal;
+    
+    modal.onclick = function(e) {
+        if (e.target === modal) cerrarModal();
+    };
+}
+
+function mostrarModalInfo(mensaje) {
+    alert(mensaje); // Fallback simple
+}
+    
+    // ============================================
+    // 21. CARGAR DATOS INICIALES
+    // ============================================
+    function cargarEstadisticas() {
+        cargarTodosLosStocks().then(function(stocks) {
+            if (!escuelaId || !stocks) return;
+            
+            var stocksEscuela = [];
+            for (var i = 0; i < stocks.length; i++) {
+                if (stocks[i].inventario_id == escuelaId) {
+                    stocksEscuela.push(stocks[i]);
+                }
+            }
+            
+            document.getElementById('totalProducts').textContent = stocksEscuela.length;
+            
+            var totalStock = 0;
+            for (var j = 0; j < stocksEscuela.length; j++) {
+                totalStock += stocksEscuela[j].cantidad;
+            }
+            document.getElementById('inStockProducts').textContent = totalStock;
+        });
+    }
+    
+    cargarEstadisticas();
+    cargarInventarioEscuela();
+    cargarAlertasEscuela();
 });

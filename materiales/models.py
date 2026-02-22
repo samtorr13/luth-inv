@@ -15,6 +15,11 @@ class material(models.Model):
         TABLONES = 'TABLONES'
         LAMINAS = 'LAMINAS'
 
+    class Estado(models.TextChoices):
+         PENDIENTE = 'PENDIENTE', 'Pendiente'
+         APROBADO = 'APROBADO', 'Aprobado'
+         RECHAZADO = 'RECHAZADO', 'Rechazado'
+         ENTREGADO = 'ENTREGADO', 'Entregado'
     name = models.TextField(max_length=40)
     desc = models.TextField(max_length=150, null=True)
     tipo = models.CharField(
@@ -27,7 +32,8 @@ class material(models.Model):
     unidad = models.CharField (max_length=20, choices=Unidad.choices, 
                                default=Unidad.KILOGRAMO, verbose_name='Unidad de medida')
 
-
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE,
+                            verbose_name='Estado de la entrega')
     def __str__(self):
         return f'{self.name}'
     

@@ -7,7 +7,40 @@
     <title>Luth Inv. - Sistema de Inventario</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
-    <!--script src="{% static 'js/home.js' %}"></script-->
+    <style>
+        .error-message, .errorlist {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fde8e8;
+            border: 1px solid #fbb5b5;
+            border-radius: 5px;
+            list-style: none;
+        }
+        .success-message {
+            color: #27ae60;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            border-radius: 5px;
+            display: none;
+        }
+        .user-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .user-card:hover {
+            transform: translateX(5px);
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .user-card.selected {
+            border: 2px solid #4CAF50;
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+    </style>
 </head>
 <body>
     <div class="page-container">
@@ -21,20 +54,20 @@
               
                 <div class="demo-users">
                     <h3>Usuarios de demostración:</h3>
-                    <div class="user-card" data-email="admin@luthinv.com" data-password="admin123">
-                        <div class="user-role">Administrador del Sistema</div>
-                        <div class="user-email">admin@luthinv.com</div>
-                        <span class="user-type-badge admin">ADMIN</span>
+                    <div class="user-card" data-email="gamboacaj" data-password="g1234567">
+                        <div class="user-role">Gamboacaj</div>
+                        <div class="user-email">gamboacaj</div>
+                        <span class="user-type-badge admin">g1234567</span>
                     </div>
-                    <div class="user-card" data-email="escuela_norte@luthinv.com" data-password="norte123">
-                        <div class="user-role">Escuela Primaria Norte</div>
-                        <div class="user-email">escuela_norte@luthinv.com</div>
-                        <span class="user-type-badge school">ESCUELA</span>
+                    <div class="user-card" data-email="sas@gmail.com" data-password="sas1234567">
+                        <div class="user-role">SAS</div>
+                        <div class="user-email">sas@gmail.com</div>
+                        <span class="user-type-badge school">s1234567</span>
                     </div>
-                    <div class="user-card" data-email="escuela_sur@luthinv.com" data-password="sur123">
-                        <div class="user-role">Escuela Secundaria Sur</div>
-                        <div class="user-email">escuela_sur@luthinv.com</div>
-                        <span class="user-type-badge school">ESCUELA</span>
+                    <div class="user-card" data-email="escuela" data-password="e123456789">
+                        <div class="user-role">Escuela</div>
+                        <div class="user-email">escuela</div>
+                        <span class="user-type-badge school">e123456789</span>
                     </div>
                     <div class="user-card" data-email="escuela_centro@luthinv.com" data-password="centro123">
                         <div class="user-role">Colegio Centro</div>
@@ -50,13 +83,36 @@
                     <p>Ingresa tus credenciales para acceder al sistema</p>
                 </div>
                 
-                <form method='post' id="loginForm">
+                <!-- Mostrar mensajes de Django -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="error-message" style="display: block;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <!-- Mostrar errores del formulario -->
+                {% if form.errors %}
+                <div class="error-message" style="display: block;">
+                    <ul class="errorlist">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <form method="post" action="{% url 'login' %}" id="loginForm">
                     {% csrf_token %}
+                    
                     <div class="form-group">
-                        <label for="email">Correo Electrónico</label>
+                        <label for="username">Usuario o Correo Electrónico</label>
                         <div class="input-with-icon">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" name="username" id="email" placeholder="ejemplo@luthinv.com" required>
+                            <i class="fas fa-user"></i>
+                            <input type="text" name="username" id="username" placeholder="usuario o email" required>
                         </div>
                     </div>
                     
@@ -71,13 +127,10 @@
                         </div>
                     </div>
                     
-                    <div class="error-message" id="errorMessage">
-                        Credenciales incorrectas. Por favor, inténtalo de nuevo.
-                    </div>
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
                     
-                    <div class="success-message" id="successMessage">
-                        ¡Inicio de sesión exitoso! Redirigiendo al sistema...
-                    </div>
+                    <div class="error-message" id="errorMessage" style="display: none;"></div>
+                    <div class="success-message" id="successMessage" style="display: none;"></div>
                     
                     <button type="submit" class="btn-login" id="loginButton">
                         <span id="buttonText">Iniciar Sesión</span>
@@ -91,10 +144,9 @@
             </div>
         </div>
 
-        <!-- FOOTER SEPARADO al final de la página -->
+        <!-- FOOTER -->
         <footer class="site-footer">
             <div class="footer-content">
-                <!-- Sección Nosotros -->
                 <div class="about-section">
                     <div class="about-icon">
                         <i class="fas fa-users"></i>
@@ -103,15 +155,72 @@
                         <h3>Conoce a nuestro equipo</h3>
                         <p>Somos estudiantes de la UNEXCA desarrollando un sistema de gestión de inventario musical como proyecto académico.</p>
                     </div>
-                    <a>
+                    <a href="{% url 'nosotros' %}">
                         <i class="fas fa-arrow-right"></i>
                         Conócenos
                     </a>
                 </div>
-                
-               
             </div>
         </footer>
     </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle contraseña
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordField = document.getElementById('password');
+            
+            if (togglePassword && passwordField) {
+                togglePassword.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    if (passwordField.type === 'password') {
+                        passwordField.type = 'text';
+                        icon.className = 'fas fa-eye-slash';
+                    } else {
+                        passwordField.type = 'password';
+                        icon.className = 'fas fa-eye';
+                    }
+                });
+            }
+            
+            // Usuarios demo
+            document.querySelectorAll('.user-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.getElementById('username').value = this.dataset.email;
+                    document.getElementById('password').value = this.dataset.password;
+                    
+                    document.querySelectorAll('.user-card').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    
+                    document.querySelectorAll('.error-message').forEach(msg => {
+                        msg.style.display = 'none';
+                    });
+                });
+            });
+            
+            // Limpiar mensajes al escribir
+            const usernameField = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            
+            if (usernameField) {
+                usernameField.addEventListener('input', function() {
+                    document.querySelectorAll('.error-message').forEach(msg => {
+                        msg.style.display = 'none';
+                    });
+                });
+            }
+            
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    document.querySelectorAll('.error-message').forEach(msg => {
+                        msg.style.display = 'none';
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>

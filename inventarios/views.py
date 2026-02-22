@@ -18,7 +18,7 @@ def dashboard(request):
     inv = user.admin_of 
     
     mat = material.objects.all()
-    total_stock = inv.Stock.objects.aggregate(Sum('mat_qty'))['mat_qty__sum'] or 0
+    total_stock = 2 #inv.Stock.objects.aggregate(Sum('mat_qty'))['mat_qty__sum'] or 0
 
     recent_alerts = AlertaStock.objects.filter(resuelto=False).order_by('-fecha')[:5]
     alert = AlertaStock.objects.filter(resuelto=False)

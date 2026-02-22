@@ -724,3 +724,137 @@
                 max-width: 100%;
             }
         }
+
+/* Estilos adicionales para usuarios */
+.role-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+.role-admin {
+    background-color: #cce5ff;
+    color: #004085;
+}
+.role-escuela {
+    background-color: #d4edda;
+    color: #155724;
+}
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+.status-in-stock {
+    background-color: #d4edda;
+    color: #155724;
+}
+.status-out-of-stock {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.action-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 2px;
+}
+.action-btn.edit {
+    background-color: #007bff;
+    color: white;
+}
+.action-btn.delete {
+    background-color: #dc3545;
+    color: white;
+}
+.action-btn.view {
+    background-color: #6c757d;
+    color: white;
+}
+.filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.filter-input, .filter-select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    flex: 1;
+    min-width: 200px;
+}
+/* Estilos para tablas responsivas */
+.section-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#usersTable {
+    min-width: 1200px;
+    white-space: nowrap;
+}
+
+#usersTable th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 10;
+}
+
+/* Mejoras visuales para la tabla */
+#usersTable tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.action-btn {
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Tarjetas de estadísticas responsive */
+.stats-cards-mini {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+@media (max-width: 768px) {
+    .stats-cards-mini {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-cards-mini {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Scroll personalizado */
+.section-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.section-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.section-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.section-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

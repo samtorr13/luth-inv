@@ -9,6 +9,8 @@ class CustomUser(AbstractUser):
 
     rol = models.CharField(choices=Rol.choices, default=Rol.ESCUELA)
     nro_tlf = models.PositiveIntegerField(null=True)
+
+    activo = models.BooleanField(default=True)
     
     admin_of = models.ForeignKey(Inventarios, on_delete=models.SET_NULL, null=True, blank=True, related_name='Administrador')
 

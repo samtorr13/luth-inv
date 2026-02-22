@@ -7,10 +7,155 @@
     <title>Dashboard Admin - Luth Inv.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-
-    <script src="{% static 'js/dashboard.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
-
+    <style>
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-in-stock {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-low-stock {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-out-of-stock {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-input,
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .section-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .action-btn.edit {
+            background-color: #007bff;
+            color: white;
+        }
+        .action-btn.delete {
+            background-color: #dc3545;
+            color: white;
+        }
+        .action-btn.view {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-action {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        .btn-action.primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-action.secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-submit {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -22,16 +167,22 @@
                     <p>Sistema de Inventario</p>
                 </div>
             </div>
-            
+
             <div class="user-info">
-                <div class="user-avatar" id="userAvatar">A</div>
+                <div class="user-avatar" id="userAvatar">{{ user.first_name|first|default:'A' }}</div>
                 <div class="user-details">
                     <h3 id="userName">{{ user.first_name }} {{ user.last_name }}</h3>
-                    <p id="userRole">Administrador de {{ user.admin_of.name }}</p>
+                    <p id="userRole">
+                        {% if user.rol == 'ADMIN' %}
+                            Administrador del Sistema
+                            {% if user.admin_of %}de {{ user.admin_of.name }}{% endif %}
+                        {% else %}
+                            Usuario
+                        {% endif %}
+                    </p>
                 </div>
-                
 
-                <form action="{% url 'logout' %}" method="post">
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="logout-btn" id="logoutBtn">
                         <i class="fas fa-sign-out-alt"></i>
@@ -40,13 +191,13 @@
                 </form>
             </div>
         </header>
-        
+
         <main class="dashboard-main">
             <nav class="dashboard-sidebar">
                 <ul class="sidebar-menu">
                     <li><a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
                     <li><a href="#" data-section="inventario"><i class="fas fa-box"></i> <span>Inventario</span></a></li>
-                    <li><a href="#" data-section="categorias"><i class="fas fa-list"></i> <span>Categorías</span></a></li>
+                    <li><a href="#" data-section="categorias"><i class="fas fa-list"></i> <span>Tipos de Material</span></a></li>
                     <li><a href="#" data-section="pedidos"><i class="fas fa-shopping-cart"></i> <span>Pedidos</span></a></li>
                     <li><a href="#" data-section="reportes"><i class="fas fa-chart-bar"></i> <span>Reportes</span></a></li>
                     <li><a href="#" data-section="usuarios"><i class="fas fa-users"></i> <span>Usuarios</span></a></li>
@@ -54,9 +205,11 @@
                     <li><a href="#" data-section="configuracion"><i class="fas fa-cogs"></i> <span>Configuración</span></a></li>
                 </ul>
             </nav>
-            
+
             <section class="dashboard-content">
-                <!-- Sección Dashboard (por defecto) -->
+                <!-- ============================================ -->
+                <!-- SECCIÓN DASHBOARD (INICIO) -->
+                <!-- ============================================ -->
                 <div id="section-dashboard" class="dashboard-section active">
                     <div class="welcome-message">
                         <div class="welcome-text">
@@ -67,59 +220,59 @@
                             <i class="fas fa-chart-line"></i>
                         </div>
                     </div>
-                    
+
                     <div class="content-header">
                         <h2>Resumen General del Sistema</h2>
-                        <div class="date-display" id="currentDate">Cargando fecha...</div>
+                        <div class="date-display" id="currentDate"></div>
                     </div>
-                    
+
                     <div class="stats-cards">
                         <div class="stat-card">
                             <div class="stat-icon blue">
                                 <i class="fas fa-school"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="totalSchools">{{ escuelas.count }}</h3>
+                                <h3 id="totalSchools">{{ total_escuelas|default:0 }}</h3>
                                 <p>Escuelas Activas</p>
                             </div>
                         </div>
-                        
+
                         <div class="stat-card">
                             <div class="stat-icon green">
                                 <i class="fas fa-boxes"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="totalProducts">{{ materiales.count }}</h3>
-                                <p>Productos Totales</p>
+                                <h3 id="totalProducts">{{ total_materiales|default:0 }}</h3>
+                                <p>Materiales Totales</p>
                             </div>
                         </div>
-                        
+
                         <div class="stat-card">
                             <div class="stat-icon orange">
                                 <i class="fas fa-shopping-cart"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="pendingOrders">14</h3>
+                                <h3 id="pendingOrders">{{ estadisticas.pedidos_pendientes|default:0 }}</h3>
                                 <p>Pedidos Pendientes</p>
                             </div>
                         </div>
-                        
+
                         <div class="stat-card">
                             <div class="stat-icon red">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="criticalAlerts">{{ alertas.count }}</h3>
+                                <h3 id="criticalAlerts">{{ alertas_criticas|default:0 }}</h3>
                                 <p>Alertas Críticas</p>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="section-container">
                         <div class="section-header">
                             <h3>Alertas Recientes</h3>
                             <div class="section-actions">
-                                <button class="btn-action" id="markAllReadBtn">
+                                <button class="btn-action secondary" id="markAllReadBtn">
                                     <i class="fas fa-check-double"></i>
                                     <span>Marcar Todas como Leídas</span>
                                 </button>
@@ -128,24 +281,22 @@
 
                         <div id="alertsList">
                             {% for alerta in recent_alerts %}
-
-                            <ul>
-                                <li>
-                                <div class="alert-item">
-                            
-                                    Alerta {{ alerta.id }}: {{ alerta.msg }} - {{ alerta.fecha|date:"d M Y H:i" }}<br>
-
+                                <div class="alert-item"
+                                    style="padding: 10px; margin: 5px 0; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                                    <strong>Alerta #{{ alerta.id }}:</strong> {{ alerta.msg }}
+                                    <br>
+                                    <small>{{ alerta.inv.name }} - {{ alerta.fecha|date:"d/m/Y H:i" }}</small>
                                 </div>
-                                </li>
-                            <ul>
+                            {% empty %}
+                                <p style="text-align: center; padding: 20px; color: #6c757d;">No hay alertas pendientes</p>
                             {% endfor %}
                         </div>
                     </div>
-                    
+
                     <div class="section-container">
                         <div class="section-header">
                             <h3>Pedidos Pendientes por Aprobar</h3>
-                            <button class="btn-action" id="viewAllOrdersBtn">
+                            <button class="btn-action secondary" id="viewAllOrdersBtn">
                                 <i class="fas fa-list"></i>
                                 <span>Ver Todos</span>
                             </button>
@@ -163,21 +314,31 @@
                                 </tr>
                             </thead>
                             <tbody id="pendingOrdersTableBody">
-                                <!-- Los pedidos se cargarán dinámicamente -->
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 20px; color: #6c757d;">
+                                        Módulo de pedidos en desarrollo
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <div class="chart-container">
-                        <div class="chart-title">Distribución de Inventario por Escuela</div>
+                        <div class="chart-title">Distribución de Materiales por Tipo</div>
                         <div class="chart-placeholder" id="inventoryChart">
                             <i class="fas fa-chart-pie" style="font-size: 3rem; opacity: 0.5;"></i>
-                            <span style="margin-left: 15px;">Gráfico de distribución de inventario</span>
+                            <span style="margin-left: 15px;">
+                                {% for tipo, count in materiales_por_tipo.items %}
+                                    {{ tipo }}: {{ count }} materiales<br>
+                                {% endfor %}
+                            </span>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Sección Inventario -->
+
+                <!-- ============================================ -->
+                <!-- SECCIÓN INVENTARIO - CORREGIDA CON DATOS REALES -->
+                <!-- ============================================ -->
                 <div id="section-inventario" class="dashboard-section">
                     <div class="content-header">
                         <h2>Gestión de Inventario</h2>
@@ -186,549 +347,1056 @@
                                 <i class="fas fa-file-export"></i>
                                 <span>Exportar</span>
                             </button>
-                            <button class="btn-action" id="addProductBtn">
+                            <button class="btn-action primary" id="addProductBtn">
                                 <i class="fas fa-plus"></i>
-                                <span>Agregar Producto</span>
+                                <span>Agregar Material</span>
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="filter-bar">
-                        <input type="text" id="searchInventory" class="filter-input" placeholder="Buscar producto...">
+                        <input type="text" id="searchInventory" class="filter-input"
+                            placeholder="Buscar material por nombre o tipo...">
                         <select id="filterCategory" class="filter-select">
-                            <option value="">Todas las categorías</option>
-                            <option value="material-escolar">Material Escolar</option>
-                            <option value="papeleria">Papelería</option>
-                            <option value="tecnologia">Tecnología</option>
-                            <option value="mobiliario">Mobiliario</option>
+                            <option value="">Todos los tipos</option>
+                            {% for tipo_value, tipo_label in material.Tipo.choices %}
+                                <option value="{{ tipo_value }}">{{ tipo_label }}</option>
+                            {% endfor %}
                         </select>
                         <select id="filterSchool" class="filter-select">
                             <option value="">Todas las escuelas</option>
-                            <option value="SCH001">Escuela Primaria Norte</option>
-                            <option value="SCH002">Escuela Secundaria Sur</option>
-                            <option value="SCH003">Colegio Centro</option>
+                            {% for escuela in escuelas %}
+                                <option value="{{ escuela.id }}">{{ escuela.name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
+
+<!-- Tabla de Materiales - CON UBICACIONES VISIBLES -->
+<div class="section-container">
+    <table id="inventoryTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Material</th>
+                <th>Tipo</th>
+                <th>Unidad</th>
+                <th>Descripción</th>
+                <th>Ubicaciones (Escuela/Depósito)</th>
+                <th>Stock Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="inventoryTableBody">
+            {% for material in materiales %}
+                <tr>
+                    <td><span class="badge">MAT{{ material.id }}</span></td>
+                    <td><strong>{{ material.name }}</strong></td>
+                    <td>{{ material.get_tipo_display }}</td>
+                    <td>{{ material.get_unidad_display }}</td>
+                    <td>{{ material.desc|default:"-"|truncatechars:50 }}</td>
+                    <td>
+                        <!-- Aquí van las ubicaciones del material -->
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            {% for stock in stocks %}
+                                {% if stock.mat.id == material.id %}
+                                    <div style="display: flex; align-items: center; gap: 5px; background-color: #f8f9fa; padding: 3px 6px; border-radius: 4px;">
+                                        {% if stock.inv.es_depo %}
+                                            <i class="fas fa-warehouse" style="color: #17a2b8;" title="Depósito"></i>
+                                        {% else %}
+                                            <i class="fas fa-school" style="color: #28a745;" title="Escuela"></i>
+                                        {% endif %}
+                                        <span style="flex: 1;">{{ stock.inv.name }}</span>
+                                        <span style="font-weight: 600; color: #007bff;">{{ stock.mat_qty }}</span>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <!-- Si no hay stocks, mostrar mensaje -->
+                            {% if not stocks|dictsort:"mat.id"|length %}
+                                <span style="color: #6c757d; font-style: italic;">Sin ubicación</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <span style="font-size: 1.2rem; font-weight: 700; color: #007bff;">{{ material.stock_total|default:0 }}</span>
+                        <br>
+                        <small style="color: #6c757d;">Min: {{ material.stock_minimo|default:5 }}</small>
+                    </td>
+                    <td>
+                        {% if material.stock_total == 0 %}
+                            <span class="status-badge status-out-of-stock">
+                                <i class="fas fa-times-circle"></i> Agotado
+                            </span>
+                        {% elif material.stock_total < material.stock_minimo %}
+                            <span class="status-badge status-low-stock">
+                                <i class="fas fa-exclamation-triangle"></i> Bajo Stock
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-in-stock">
+                                <i class="fas fa-check-circle"></i> En Stock
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="action-btn edit" data-id="{{ material.id }}" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" data-id="{{ material.id }}" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="action-btn view" data-id="{{ material.id }}" title="Ver detalles">
+                            <i class="fas fa-chart-bar"></i>
+                        </button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-box-open" style="font-size: 3rem; color: #dee2e6;"></i>
+                        <h3 style="color: #6c757d;">No hay materiales registrados</h3>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Tabla de Stock por Escuela - VERSIÓN SIMPLE Y CONFIABLE -->
+<div class="section-container" style="margin-top: 30px;">
+    <div class="section-header">
+        <h3><i class="fas fa-warehouse"></i> Stock por Escuela</h3>
+        <button class="btn-action secondary" id="refreshStockBtn">
+            <i class="fas fa-sync-alt"></i>
+            <span>Actualizar</span>
+        </button>
+    </div>
+    
+<!-- Stock por Escuela - CON FUNCIONALIDAD DE AGREGAR Y MODIFICAR -->
+<div class="section-container" style="margin-top: 30px;">
+    
+    
+    <!-- Contenedor de stock por escuela -->
+    <div id="stocksPorEscuela">
+        {% for escuela in escuelas %}
+            <div class="escuela-stock-card" data-escuela-id="{{ escuela.id }}" style="margin-bottom: 30px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden;">
+                <!-- Cabecera de la escuela con botón AGREGAR -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-school" style="font-size: 1.8rem; color: white;"></i>
+                        <div>
+                            <h4 style="margin: 0; color: white; font-size: 1.3rem;">{{ escuela.name }}</h4>
+                            <p style="margin: 5px 0 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+                                <i class="fas fa-map-marker-alt"></i> {{ escuela.ubic|default:"Ubicación no especificada" }}
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; color: white;">
+                            <i class="fas fa-cubes"></i> <span class="total-items-{{ escuela.id }}">0</span>
+                        </div>
+                        <button class="btn-action agregar-stock" data-escuela-id="{{ escuela.id }}" data-escuela-nombre="{{ escuela.name }}" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-plus"></i> Agregar Material
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabla de stock de la escuela -->
+                <div style="padding: 20px;">
+                    <table class="stock-escuela-table" data-escuela-id="{{ escuela.id }}" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Material</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Cantidad</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Mínimo</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Estado</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Ubicación</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stock-tbody-{{ escuela.id }}">
+                            <!-- Los stocks se cargarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
                     
-                    <div class="section-container">
-                        <table id="inventoryTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Producto</th>
-                                    <th>Categoría</th>
-                                    <th>Escuela</th>
-                                    <th>Cantidad</th>
-                                    <th>Mínimo</th>
-                                    <th>Ubicación</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventoryTableBody">
-                                <!-- Los productos se cargarán dinámicamente -->
-                            </tbody>
-                        </table>
+                    <div id="stock-empty-{{ escuela.id }}" style="text-align: center; padding: 40px; color: #6c757d; display: none;">
+                        <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                        <p>No hay materiales registrados en esta escuela</p>
+                        <button class="btn-action agregar-stock" data-escuela-id="{{ escuela.id }}" data-escuela-nombre="{{ escuela.name }}" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                            <i class="fas fa-plus"></i> Agregar Material
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <!-- Si no hay ninguna escuela -->
+            <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 10px;">
+                <i class="fas fa-warehouse" style="font-size: 4rem; color: #dee2e6; margin-bottom: 20px;"></i>
+                <h3 style="color: #6c757d; margin-bottom: 10px;">No hay escuelas registradas</h3>
+                <p style="color: #adb5bd;">Agrega una escuela para comenzar a gestionar el stock</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal para Agregar/Editar Stock -->
+<div class="modal" id="stockModal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="stockModalTitle">Agregar Material a Escuela</h3>
+            <button class="modal-close" id="stockModalClose">&times;</button>
+        </div>
+        <div id="stockModalContent">
+            <form id="stockForm">
+                <input type="hidden" id="stockId" name="stockId" value="">
+                <input type="hidden" id="escuelaId" name="escuelaId" value="">
+                
+                <div class="form-group">
+                    <label for="materialSelect">Material *</label>
+                    <select id="materialSelect" name="material_id" required style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                        <option value="">Seleccionar material</option>
+                        {% for material in materiales %}
+                            <option value="{{ material.id }}">{{ material.name }} ({{ material.get_tipo_display }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="stockCantidad">Cantidad *</label>
+                        <input type="number" id="stockCantidad" name="cantidad" min="0" required style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
                     </div>
                     
-                    <!-- Formulario para agregar/editar producto -->
+                    <div class="form-group" style="flex: 1;">
+                        <label for="stockMinimo">Mínimo *</label>
+                        <input type="number" id="stockMinimo" name="minimo" min="1" required style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                    </div>
+                </div>
+                
+                <div class="form-buttons" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn-cancel" id="cancelStockBtn">Cancelar</button>
+                    <button type="submit" class="btn-submit" id="saveStockBtn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+                    <!-- Formulario para agregar/editar material -->
                     <div class="form-container" id="productForm" style="display: none;">
-                        <h3 id="productFormTitle">Agregar Nuevo Producto</h3>
-                        <form id="productFormElement">
+                        <h3 id="productFormTitle">Agregar Nuevo Material</h3>
+                        <form id="productFormElement" method="post" action="#">
+                            {% csrf_token %}
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="productName">Nombre del Producto *</label>
-                                    <input type="text" id="productName" required>
+                                    <label for="productName">Nombre del Material *</label>
+                                    <input type="text" id="productName" name="name" required maxlength="40">
                                 </div>
                                 <div class="form-group">
-                                    <label for="productCategory">Categoría *</label>
-                                    <select id="productCategory" required>
-                                        <option value="">Seleccionar categoría</option>
-                                        <option value="material-escolar">Material Escolar</option>
-                                        <option value="papeleria">Papelería</option>
-                                        <option value="tecnologia">Tecnología</option>
-                                        <option value="mobiliario">Mobiliario</option>
-                                        <option value="audiovisual">Audiovisual</option>
-                                        <option value="suministros">Suministros</option>
+                                    <label for="productTipo">Tipo de Material *</label>
+                                    <select id="productTipo" name="tipo" required>
+                                        <option value="">Seleccionar tipo</option>
+                                        {% for tipo_value, tipo_label in material.Tipo.choices %}
+                                            <option value="{{ tipo_value }}">{{ tipo_label }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="productSchool">Escuela *</label>
-                                    <select id="productSchool" required>
-                                        <option value="">Seleccionar escuela</option>
-                                        <option value="SCH001">Escuela Primaria Norte</option>
-                                        <option value="SCH002">Escuela Secundaria Sur</option>
-                                        <option value="SCH003">Colegio Centro</option>
+                                    <label for="productUnidad">Unidad de Medida *</label>
+                                    <select id="productUnidad" name="unidad" required>
+                                        <option value="">Seleccionar unidad</option>
+                                        {% for unidad_value, unidad_label in material.Unidad.choices %}
+                                            <option value="{{ unidad_value }}">{{ unidad_label }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="productQuantity">Cantidad Inicial *</label>
-                                    <input type="number" id="productQuantity" min="0" required>
+                                    <label for="productDesc">Descripción</label>
+                                    <input type="text" id="productDesc" name="desc" maxlength="150">
                                 </div>
                             </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="productMinQuantity">Cantidad Mínima *</label>
-                                    <input type="number" id="productMinQuantity" min="1" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="productLocation">Ubicación</label>
-                                    <input type="text" id="productLocation" placeholder="Ej: Almacén A">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="productDescription">Descripción</label>
-                                <textarea id="productDescription" rows="3" placeholder="Descripción del producto..."></textarea>
-                            </div>
-                            
+
                             <div class="form-buttons">
                                 <button type="button" class="btn-cancel" id="cancelProductBtn">Cancelar</button>
-                                <button type="submit" class="btn-submit" id="saveProductBtn">Guardar Producto</button>
+                                <button type="submit" class="btn-submit" id="saveProductBtn">Guardar Material</button>
                             </div>
                         </form>
                     </div>
                 </div>
-                
-                <!-- Sección Categorías -->
+
+                <!-- ============================================ -->
+                <!-- SECCIÓN CATEGORÍAS (TIPOS DE MATERIAL) - VERSIÓN SIMPLIFICADA -->
+                <!-- ============================================ -->
                 <div id="section-categorias" class="dashboard-section">
                     <div class="content-header">
-                        <h2>Gestión de Categorías</h2>
-                        <button class="btn-action" id="addCategoryBtn">
+                        <h2>Tipos de Material</h2>
+                        <button class="btn-action primary" id="addCategoryBtn">
                             <i class="fas fa-plus"></i>
-                            <span>Nueva Categoría</span>
+                            <span>Nuevo Tipo</span>
                         </button>
                     </div>
-                    
+
                     <div class="section-container">
                         <table id="categoriesTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Código</th>
                                     <th>Nombre</th>
                                     <th>Descripción</th>
-                                    <th>Productos</th>
-                                    <th>Estado</th>
+                                    <th>Materiales</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="categoriesTableBody">
-                                <!-- Las categorías se cargarán dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Formulario para agregar/editar categoría -->
-                    <div class="form-container" id="categoryForm" style="display: none;">
-                        <h3 id="categoryFormTitle">Nueva Categoría</h3>
-                        <form id="categoryFormElement">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="categoryName">Nombre de la Categoría *</label>
-                                    <input type="text" id="categoryName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="categoryCode">Código</label>
-                                    <input type="text" id="categoryCode" placeholder="Código único">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="categoryDescription">Descripción</label>
-                                <textarea id="categoryDescription" rows="3" placeholder="Descripción de la categoría..."></textarea>
-                            </div>
-                            
-                            <div class="form-buttons">
-                                <button type="button" class="btn-cancel" id="cancelCategoryBtn">Cancelar</button>
-                                <button type="submit" class="btn-submit" id="saveCategoryBtn">Guardar Categoría</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                
-                <!-- Sección Pedidos -->
-                <div id="section-pedidos" class="dashboard-section">
-                    <div class="content-header">
-                        <h2>Gestión de Pedidos</h2>
-                        <div class="header-actions">
-                            <button class="btn-action secondary" id="exportOrdersBtn">
-                                <i class="fas fa-file-export"></i>
-                                <span>Exportar</span>
-                            </button>
-                            <select id="orderFilter" class="filter-select">
-                                <option value="all">Todos los pedidos</option>
-                                <option value="pending">Pendientes</option>
-                                <option value="approved">Aprobados</option>
-                                <option value="rejected">Rechazados</option>
-                                <option value="delivered">Entregados</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="section-container">
-                        <table id="ordersTable">
-                            <thead>
                                 <tr>
-                                    <th>ID Pedido</th>
-                                    <th>Escuela</th>
-                                    <th>Producto</th>
-                                    <th>Cantidad</th>
-                                    <th>Prioridad</th>
-                                    <th>Fecha Solicitud</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
+                                    <td>MADERA</td>
+                                    <td>Maderas y Trozos</td>
+                                    <td>Materiales de tipo MADERA</td>
+                                    <td>{{ materiales_por_tipo.MADERA|default:"0" }}</td>
+                                    <td><button class="action-btn view">Ver</button></td>
                                 </tr>
-                            </thead>
-                            <tbody id="ordersTableBody">
-                                <!-- Los pedidos se cargarán dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- Sección Reportes -->
-                <div id="section-reportes" class="dashboard-section">
-                    <div class="content-header">
-                        <h2>Reportes e Informes</h2>
-                        <button class="btn-action" id="generateReportBtn">
-                            <i class="fas fa-download"></i>
-                            <span>Generar Reporte</span>
-                        </button>
-                    </div>
-                    
-                    <div class="stats-cards">
-                        <div class="stat-card">
-                            <div class="stat-icon blue">
-                                <i class="fas fa-file-pdf"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>24</h3>
-                                <p>Reportes Generados</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-icon green">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>156</h3>
-                                <p>Tendencias Analizadas</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-icon orange">
-                                <i class="fas fa-calendar-alt"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>12</h3>
-                                <p>Reportes Mensuales</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-icon purple">
-                                <i class="fas fa-exclamation-circle"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>48</h3>
-                                <p>Alertas Registradas</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="section-container">
-                        <div class="section-header">
-                            <h3>Generar Nuevo Reporte</h3>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="reportType">Tipo de Reporte</label>
-                                <select id="reportType">
-                                    <option value="inventario">Inventario General</option>
-                                    <option value="consumo">Consumo por Escuela</option>
-                                    <option value="pedidos">Pedidos por Período</option>
-                                    <option value="alertas">Reporte de Alertas</option>
-                                    <option value="financiero">Análisis Financiero</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="reportPeriod">Período</label>
-                                <select id="reportPeriod">
-                                    <option value="mes">Último Mes</option>
-                                    <option value="trimestre">Último Trimestre</option>
-                                    <option value="semestre">Último Semestre</option>
-                                    <option value="anual">Último Año</option>
-                                    <option value="personalizado">Personalizado</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row" id="customDateRange" style="display: none;">
-                            <div class="form-group">
-                                <label for="reportStartDate">Fecha Inicio</label>
-                                <input type="date" id="reportStartDate">
-                            </div>
-                            <div class="form-group">
-                                <label for="reportEndDate">Fecha Fin</label>
-                                <input type="date" id="reportEndDate">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="reportSchool">Escuela (Opcional)</label>
-                            <select id="reportSchool">
-                                <option value="">Todas las escuelas</option>
-                                <option value="SCH001">Escuela Primaria Norte</option>
-                                <option value="SCH002">Escuela Secundaria Sur</option>
-                                <option value="SCH003">Colegio Centro</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-buttons" style="margin-top: 20px;">
-                            <button class="btn-submit" id="generateReportNowBtn">
-                                <i class="fas fa-download"></i>
-                                <span>Generar Reporte</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="section-container">
-                        <div class="section-header">
-                            <h3>Reportes Recientes</h3>
-                        </div>
-                        <table id="reportsTable">
-                            <thead>
                                 <tr>
-                                    <th>ID Reporte</th>
-                                    <th>Tipo</th>
-                                    <th>Período</th>
-                                    <th>Escuela</th>
-                                    <th>Fecha Generación</th>
-                                    <th>Acciones</th>
+                                    <td>BARNIZ</td>
+                                    <td>Barnices y Pinturas</td>
+                                    <td>Materiales de tipo BARNIZ</td>
+                                    <td>{{ materiales_por_tipo.BARNIZ|default:"0" }}</td>
+                                    <td><button class="action-btn view">Ver</button></td>
                                 </tr>
-                            </thead>
-                            <tbody id="reportsTableBody">
-                                <!-- Los reportes se cargarán dinámicamente -->
+                                <tr>
+                                    <td>HERRAJE</td>
+                                    <td>Herrajes y Piezas</td>
+                                    <td>Materiales de tipo HERRAJE</td>
+                                    <td>{{ materiales_por_tipo.HERRAJE|default:"0" }}</td>
+                                    <td><button class="action-btn view">Ver</button></td>
+                                </tr>
+                                <tr>
+                                    <td>CUERDAS</td>
+                                    <td>Cuerdas</td>
+                                    <td>Materiales de tipo CUERDAS</td>
+                                    <td>{{ materiales_por_tipo.CUERDAS|default:"0" }}</td>
+                                    <td><button class="action-btn view">Ver</button></td>
+                                </tr>
+                                <tr>
+                                    <td>HERRAMIENTA</td>
+                                    <td>Herramientas</td>
+                                    <td>Materiales de tipo HERRAMIENTA</td>
+                                    <td>{{ materiales_por_tipo.HERRAMIENTA|default:"0" }}</td>
+                                    <td><button class="action-btn view">Ver</button></td>
+                                </tr>
+                                <tr>
+                                    <td>OTRO</td>
+                                    <td>Otros</td>
+                                    <td>Materiales de tipo OTRO</td>
+                                    <td>{{ materiales_por_tipo.OTRO|default:"0" }}</td>
+                                    <td><button class="action-btn view">Ver</button></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-                
-                <!-- Sección Usuarios -->
+<!-- ============================================ -->
+<!-- SECCIÓN PEDIDOS - GESTIÓN PARA ADMIN -->
+<!-- ============================================ -->
+<div id="section-pedidos" class="dashboard-section">
+    <div class="content-header">
+        <h2><i class="fas fa-shopping-cart"></i> Gestión de Pedidos</h2>
+        <div class="header-actions">
+            <button class="btn-action secondary" id="refreshPedidosBtn">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+        </div>
+    </div>
+    
+    <!-- Tarjetas de estadísticas -->
+    <div class="stats-cards" style="margin-bottom: 20px;">
+        <div class="stat-card" style="cursor: pointer;" onclick="filtrarPedidos('pendiente')">
+            <div class="stat-icon orange">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="pendientesCount">0</h3>
+                <p>Pendientes</p>
+            </div>
+        </div>
+        
+        <div class="stat-card" style="cursor: pointer;" onclick="filtrarPedidos('aprobado')">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="aprobadosCount">0</h3>
+                <p>Aprobados</p>
+            </div>
+        </div>
+        
+        <div class="stat-card" style="cursor: pointer;" onclick="filtrarPedidos('rechazado')">
+            <div class="stat-icon red">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="rechazadosCount">0</h3>
+                <p>Rechazados</p>
+            </div>
+        </div>
+        
+        <div class="stat-card" style="cursor: pointer;" onclick="filtrarPedidos('entregado')">
+            <div class="stat-icon blue">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="entregadosCount">0</h3>
+                <p>Entregados</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filter-bar" style="margin-bottom: 20px;">
+        <select id="estadoFilter" class="filter-select" style="flex: 1;">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">⏳ Pendientes</option>
+            <option value="aprobado">✅ Aprobados</option>
+            <option value="rechazado">❌ Rechazados</option>
+            <option value="entregado">📦 Entregados</option>
+        </select>
+        
+        <select id="escuelaFilter" class="filter-select" style="flex: 1;">
+            <option value="">Todas las escuelas</option>
+            {% for escuela in escuelas %}
+                <option value="{{ escuela.id }}">{{ escuela.name }}</option>
+            {% endfor %}
+        </select>
+        
+        <input type="text" id="searchPedidos" class="filter-input" placeholder="Buscar por material o escuela..." style="flex: 2;">
+    </div>
+    
+    <!-- Tabla de pedidos -->
+    <div class="section-container" style="padding: 0; overflow: hidden;">
+        <div style="overflow-x: auto;">
+            <table id="pedidosTable" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                        <th style="padding: 15px;">ID</th>
+                        <th style="padding: 15px;">Fecha</th>
+                        <th style="padding: 15px;">Escuela</th>
+                        <th style="padding: 15px;">Material</th>
+                        <th style="padding: 15px;">Cantidad</th>
+                        <th style="padding: 15px;">Solicitante</th>
+                        <th style="padding: 15px;">Estado</th>
+                        <th style="padding: 15px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="pedidosTableBody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                            <p>Cargando pedidos...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver/responder pedido -->
+<div class="modal" id="pedidoModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 id="pedidoModalTitle">Detalles del Pedido</h3>
+            <button class="modal-close" id="pedidoModalClose">&times;</button>
+        </div>
+        <div id="pedidoModalContent" style="padding: 20px;">
+            <!-- Contenido dinámico -->
+        </div>
+    </div>
+</div>
+<!-- ============================================ -->
+<!-- SECCIÓN REPORTES PARA ADMIN -->
+<!-- ============================================ -->
+<div id="section-reportes" class="dashboard-section">
+    <div class="content-header">
+        <h2><i class="fas fa-chart-bar"></i> Reportes e Informes</h2>
+        <div class="date-display" id="reportDate">{{ now|date:"l, d F Y" }}</div>
+    </div>
+    
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="totalMaterialesReport">{{ total_materiales|default:0 }}</h3>
+                <p>Materiales Totales</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="totalMovimientosReport">0</h3>
+                <p>Movimientos</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="totalPedidosReport">0</h3>
+                <p>Pedidos</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon red">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="totalAlertasReport">0</h3>
+                <p>Alertas</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section-container">
+        <div class="section-header">
+            <h3><i class="fas fa-file-pdf"></i> Generar Nuevo Reporte</h3>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="reportType">Tipo de Reporte</label>
+                <select id="reportType" class="form-control">
+                    <option value="inventario">📦 Inventario General</option>
+                    <option value="consumo">📊 Consumo por Período</option>
+                    <option value="pedidos">📋 Historial de Pedidos</option>
+                    <option value="alertas">⚠️ Reporte de Alertas</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reportPeriod">Período</label>
+                <select id="reportPeriod" class="form-control">
+                    <option value="mes">Último Mes</option>
+                    <option value="trimestre">Último Trimestre</option>
+                    <option value="semestre">Último Semestre</option>
+                    <option value="anual">Último Año</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-buttons" style="margin-top: 20px;">
+            <button class="btn-submit" id="generateReportBtn">
+                <i class="fas fa-file-alt"></i> Generar Reporte
+            </button>
+            <button class="btn-action secondary" id="exportReportBtn">
+                <i class="fas fa-file-excel"></i> Exportar a Excel
+            </button>
+        </div>
+    </div>
+    
+    <!-- Vista previa del reporte -->
+    <div class="section-container" id="reportPreviewContainer" style="display: none;">
+        <div class="section-header">
+            <h3 id="reportPreviewTitle">Vista Previa del Reporte</h3>
+            <button class="btn-action secondary" id="closePreviewBtn">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+        </div>
+        <div id="reportPreview" style="max-height: 400px; overflow-y: auto;">
+            <!-- Contenido dinámico -->
+        </div>
+    </div>
+</div>
+
+                <!-- ============================================ -->
+                <!-- SECCIÓN USUARIOS - CON TABLA RESPONSIVA -->
+                <!-- ============================================ -->
                 <div id="section-usuarios" class="dashboard-section">
                     <div class="content-header">
                         <h2>Gestión de Usuarios</h2>
-                        <button class="btn-action" id="addUserBtn">
+                        <button class="btn-action primary" id="addUserBtn">
                             <i class="fas fa-plus"></i>
                             <span>Nuevo Usuario</span>
                         </button>
                     </div>
-                    
-                    <div class="section-container">
-                        <table id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>Rol</th>
-                                    <th>Escuela</th>
-                                    <th>Estado</th>
-                                    <th>Último Acceso</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody">
-                                <!-- Los usuarios se cargarán dinámicamente -->
-                            </tbody>
-                        </table>
+
+                    <!-- Tarjetas de estadísticas compactas -->
+                    <div class="stats-cards-mini"
+                        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                        <div
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 10px; color: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="fas fa-users" style="font-size: 2rem; opacity: 0.8;"></i>
+                                </div>
+                                <div style="text-align: right;">
+                                    <h3 style="margin: 0; font-size: 1.8rem;">{{ usuarios.count|default:0 }}</h3>
+                                    <p style="margin: 0; opacity: 0.9;">Total</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%); padding: 15px; border-radius: 10px; color: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="fas fa-user-tie" style="font-size: 2rem; opacity: 0.8;"></i>
+                                </div>
+                                <div style="text-align: right;">
+                                    <h3 style="margin: 0; font-size: 1.8rem;">{{ usuarios_administradores|default:0 }}</h3>
+                                    <p style="margin: 0; opacity: 0.9;">Admins</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="background: linear-gradient(135deg, #48c774 0%, #00d68f 100%); padding: 15px; border-radius: 10px; color: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="fas fa-user-graduate" style="font-size: 2rem; opacity: 0.8;"></i>
+                                </div>
+                                <div style="text-align: right;">
+                                    <h3 style="margin: 0; font-size: 1.8rem;">{{ usuarios_escuelas|default:0 }}</h3>
+                                    <p style="margin: 0; opacity: 0.9;">Escuelas</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="background: linear-gradient(135deg, #ffb822 0%, #f39c12 100%); padding: 15px; border-radius: 10px; color: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="fas fa-user-clock" style="font-size: 2rem; opacity: 0.8;"></i>
+                                </div>
+                                <div style="text-align: right;">
+                                    <h3 style="margin: 0; font-size: 1.8rem;">{{ usuarios_activos|default:0 }}</h3>
+                                    <p style="margin: 0; opacity: 0.9;">Activos</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- Formulario para agregar/editar usuario -->
-                    <div class="form-container" id="userForm" style="display: none;">
-                        <h3 id="userFormTitle">Nuevo Usuario</h3>
-                        <form id="userFormElement">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="userName">Nombre Completo *</label>
-                                    <input type="text" id="userName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="userEmail">Email *</label>
-                                    <input type="email" id="userEmail" required>
-                                </div>
+
+                    <!-- Filtros compactos -->
+                    <div
+                        style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="flex: 2; min-width: 200px;">
+                            <input type="text" id="searchUsers" class="filter-input"
+                                placeholder="🔍 Buscar por nombre, usuario o email..."
+                                style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <select id="filterUserRole" class="filter-select"
+                                style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                                <option value="">Todos los roles</option>
+                                <option value="ADMIN">👑 Administradores</option>
+                                <option value="ESCUELA">🏫 Usuarios Escuela</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <select id="filterUserStatus" class="filter-select"
+                                style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                                <option value="">Todos los estados</option>
+                                <option value="true">✅ Activos</option>
+                                <option value="false">❌ Inactivos</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <select id="filterUserSchool" class="filter-select"
+                                style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                                <option value="">Todas las escuelas</option>
+                                {% for escuela in escuelas %}
+                                    <option value="{{ escuela.id }}">{{ escuela.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor con scroll para la tabla -->
+                    <div class="section-container"
+                        style="padding: 0; overflow: hidden; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="overflow-x: auto; max-width: 100%;">
+                            <div style="min-width: 1200px;">
+                                <!-- Ancho mínimo para evitar que se compriman las columnas -->
+                                <table id="usersTable" style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                    <thead
+                                        style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); position: sticky; top: 0; z-index: 10;">
+                                        <tr>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">ID</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Usuario</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Nombre</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Apellido</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Email</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Rol</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Escuela</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Teléfono</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Estado</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Último Acceso</th>
+                                            <th style="padding: 15px 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        {% for usuario in usuarios %}
+                                            <tr style="border-bottom: 1px solid #e9ecef; transition: background-color 0.2s;"
+                                                onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                                onmouseout="this.style.backgroundColor='transparent'">
+                                                <td style="padding: 12px 10px;"><span
+                                                        style="background: #6c757d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">USER{{ usuario.id }}</span>
+                                                </td>
+                                                <td style="padding: 12px 10px; font-weight: 600;">{{ usuario.username }}</td>
+                                                <td style="padding: 12px 10px;">{{ usuario.first_name|default:"-" }}</td>
+                                                <td style="padding: 12px 10px;">{{ usuario.last_name|default:"-" }}</td>
+                                                <td style="padding: 12px 10px;">
+                                                    <span style="color: #007bff; text-decoration: none;">
+                                                        <i class="fas fa-envelope"
+                                                            style="font-size: 0.8rem; margin-right: 5px;"></i>{{ usuario.email|default:"-" }}
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 12px 10px;">
+                                                    {% if usuario.rol == 'ADMIN' %}
+                                                        <span
+                                                            style="background: #cce5ff; color: #004085; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;">
+                                                            <i class="fas fa-crown" style="margin-right: 5px;"></i>Administrador
+                                                        </span>
+                                                    {% else %}
+                                                        <span
+                                                            style="background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;">
+                                                            <i class="fas fa-school" style="margin-right: 5px;"></i>Escuela
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding: 12px 10px;">
+                                                    {% if usuario.admin_of %}
+                                                        <span
+                                                            style="background: #e2e3e5; color: #383d41; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                                                            <i class="fas fa-map-marker-alt"></i> {{ usuario.admin_of.name }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span style="color: #6c757d;"><i class="fas fa-globe"></i> Sistema</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding: 12px 10px;">
+                                                    {% if usuario.nro_tlf %}
+                                                        <span
+                                                            style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                                                            <i class="fas fa-phone"></i> {{ usuario.nro_tlf }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span style="color: #adb5bd;">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding: 12px 10px;">
+                                                    {% if usuario.is_active %}
+                                                        <span
+                                                            style="background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                                                            <i class="fas fa-check-circle"></i> Activo
+                                                        </span>
+                                                    {% else %}
+                                                        <span
+                                                            style="background: #f8d7da; color: #721c24; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                                                            <i class="fas fa-times-circle"></i> Inactivo
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding: 12px 10px;">
+                                                    {% if usuario.last_login %}
+                                                        <span style="color: #6c757d; font-size: 0.85rem;">
+                                                            <i class="fas fa-clock"></i> {{ usuario.last_login|date:"d/m/Y H:i" }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span style="color: #adb5bd; font-size: 0.85rem;">
+                                                            <i class="fas fa-hourglass"></i> Nunca
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding: 12px 10px;">
+                                                    <div style="display: flex; gap: 5px;">
+                                                        <button class="action-btn edit" data-id="{{ usuario.id }}"
+                                                            title="Editar usuario"
+                                                            style="background: #007bff; border: none; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="action-btn delete" data-id="{{ usuario.id }}"
+                                                            title="Eliminar usuario"
+                                                            style="background: #dc3545; border: none; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                        {% if usuario.is_active %}
+                                                            <button class="action-btn view" data-id="{{ usuario.id }}"
+                                                                title="Desactivar usuario"
+                                                                style="background: #ffc107; border: none; color: #212529; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                                                <i class="fas fa-ban"></i>
+                                                            </button>
+                                                        {% else %}
+                                                            <button class="action-btn view" data-id="{{ usuario.id }}"
+                                                                title="Activar usuario"
+                                                                style="background: #28a745; border: none; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                                                <i class="fas fa-check-circle"></i>
+                                                            </button>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="11" style="text-align: center; padding: 60px 20px;">
+                                                    <div style="text-align: center;">
+                                                        <i class="fas fa-users"
+                                                            style="font-size: 4rem; color: #dee2e6; margin-bottom: 20px;"></i>
+                                                        <h3 style="color: #6c757d; margin-bottom: 10px;">No hay usuarios registrados</h3>
+                                                        <p style="color: #adb5bd;">Haz clic en "Nuevo Usuario" para comenzar</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
-                            
-                            <div class="form-row">
+                        </div>
+
+                        <!-- Información de paginación (opcional) -->
+                        <div
+                            style="padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
+                            <div>
+                                <span style="color: #6c757d;">
+                                    <i class="fas fa-database"></i> Total: <strong>{{ usuarios.count|default:0 }}</strong> usuarios
+                                </span>
+                            </div>
+                            <div>
+                                <span style="color: #6c757d;">
+                                    <i class="fas fa-check-circle" style="color: #28a745;"></i> Activos:
+                                    <strong>{{ usuarios_activos|default:0 }}</strong>
+                                    <span style="margin: 0 10px;">|</span>
+                                    <i class="fas fa-times-circle" style="color: #dc3545;"></i> Inactivos:
+                                    <strong>{{ usuarios_inactivos|default:0 }}</strong>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario para agregar/editar usuario (compacto) -->
+                    <div class="form-container" id="userForm"
+                        style="display: none; margin-top: 30px; background: white; border-radius: 10px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                        <h3 id="userFormTitle"
+                            style="margin-top: 0; margin-bottom: 20px; color: #343a40; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
+                            <i class="fas fa-user-plus" style="margin-right: 10px;"></i> Nuevo Usuario
+                        </h3>
+                        <form id="userFormElement" method="post" action="#">
+                            {% csrf_token %}
+
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
                                 <div class="form-group">
-                                    <label for="userRole">Rol *</label>
-                                    <select id="userRole" required>
+                                    <label for="username"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-user"></i> Usuario *
+                                    </label>
+                                    <input type="text" id="username" name="username" required placeholder="ej: jperez"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="email"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-envelope"></i> Email *
+                                    </label>
+                                    <input type="email" id="email" name="email" required placeholder="usuario@ejemplo.com"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="first_name"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-user-tag"></i> Nombre
+                                    </label>
+                                    <input type="text" id="first_name" name="first_name" placeholder="Juan"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="last_name"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-user-tag"></i> Apellido
+                                    </label>
+                                    <input type="text" id="last_name" name="last_name" placeholder="Pérez"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="userRole"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-user-shield"></i> Rol *
+                                    </label>
+                                    <select id="userRole" name="rol" required
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
                                         <option value="">Seleccionar rol</option>
-                                        <option value="admin">Administrador</option>
-                                        <option value="school-admin">Administrador Escolar</option>
-                                        <option value="school-user">Usuario Escolar</option>
+                                        {% for rol_value, rol_label in CustomUser.Rol.choices %}
+                                            <option value="{{ rol_value }}">{{ rol_label }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
+
                                 <div class="form-group">
-                                    <label for="userSchool">Escuela</label>
-                                    <select id="userSchool">
-                                        <option value="">Sin escuela (solo para admin)</option>
-                                        <option value="SCH001">Escuela Primaria Norte</option>
-                                        <option value="SCH002">Escuela Secundaria Sur</option>
-                                        <option value="SCH003">Colegio Centro</option>
+                                    <label for="userSchool"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-school"></i> Escuela
+                                    </label>
+                                    <select id="userSchool" name="admin_of"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                                        <option value="">Ninguna (Sistema)</option>
+                                        {% for escuela in escuelas %}
+                                            <option value="{{ escuela.id }}">{{ escuela.name }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
-                            </div>
-                            
-                            <div class="form-row">
+
                                 <div class="form-group">
-                                    <label for="userPassword">Contraseña *</label>
-                                    <input type="password" id="userPassword" required>
+                                    <label for="nro_tlf"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-phone"></i> Teléfono
+                                    </label>
+                                    <input type="text" id="nro_tlf" name="nro_tlf" placeholder="04121234567"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
                                 </div>
+
                                 <div class="form-group">
-                                    <label for="userConfirmPassword">Confirmar Contraseña *</label>
-                                    <input type="password" id="userConfirmPassword" required>
+                                    <label for="is_active"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-toggle-on"></i> Estado
+                                    </label>
+                                    <select id="is_active" name="is_active"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                                        <option value="true">Activo</option>
+                                        <option value="false">Inactivo</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="password"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-lock"></i> Contraseña
+                                    </label>
+                                    <input type="password" id="password" name="password" placeholder="••••••••"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
+                                    <small style="color: #6c757d; display: block; margin-top: 5px;">Dejar en blanco para no
+                                        cambiar</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="confirm_password"
+                                        style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">
+                                        <i class="fas fa-lock"></i> Confirmar
+                                    </label>
+                                    <input type="password" id="confirm_password" name="confirm_password"
+                                        placeholder="••••••••"
+                                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px;">
                                 </div>
                             </div>
-                            
-                            <div class="form-buttons">
-                                <button type="button" class="btn-cancel" id="cancelUserBtn">Cancelar</button>
-                                <button type="submit" class="btn-submit" id="saveUserBtn">Guardar Usuario</button>
+
+                            <div
+                                style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+                                <button type="button" class="btn-cancel" id="cancelUserBtn"
+                                    style="padding: 10px 25px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                                <button type="submit" class="btn-submit" id="saveUserBtn"
+                                    style="padding: 10px 25px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-save"></i> Guardar Usuario
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
-                
-                <!-- Sección Escuelas -->
+
+                <!-- ============================================ -->
+                <!-- SECCIÓN ESCUELAS -->
+                <!-- ============================================ -->
                 <div id="section-escuelas" class="dashboard-section">
                     <div class="content-header">
                         <h2>Gestión de Escuelas</h2>
-                        <button class="btn-action" id="addSchoolBtn">
+                        <button class="btn-action primary" id="addSchoolBtn">
                             <i class="fas fa-plus"></i>
                             <span>Nueva Escuela</span>
                         </button>
                     </div>
-                    
+
                     <div class="stats-cards">
                         <div class="stat-card">
                             <div class="stat-icon blue">
                                 <i class="fas fa-school"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>3</h3>
+                                <h3>{{ total_escuelas }}</h3>
                                 <p>Escuelas Activas</p>
                             </div>
                         </div>
-                        
+
                         <div class="stat-card">
                             <div class="stat-icon green">
                                 <i class="fas fa-users"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>12</h3>
+                                <h3>{{ usuarios.count }}</h3>
                                 <p>Usuarios Totales</p>
                             </div>
                         </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-icon orange">
-                                <i class="fas fa-box"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>856</h3>
-                                <p>Productos Promedio</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-icon red">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>5</h3>
-                                <p>Alertas Activas</p>
-                            </div>
-                        </div>
                     </div>
-                    
+
                     <div class="section-container">
                         <table id="schoolsTable">
                             <thead>
                                 <tr>
                                     <th>ID</th>
                                     <th>Nombre</th>
-                                    <th>Dirección</th>
-                                    <th>Teléfono</th>
-                                    <th>Contacto</th>
+                                    <th>Ubicación</th>
                                     <th>Usuarios</th>
-                                    <th>Productos</th>
-                                    <th>Estado</th>
+                                    <th>Materiales</th>
+                                    <th>Tipo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="schoolsTableBody">
-                                <!-- Las escuelas  -->
+                                {% for escuela in escuelas %}
+                                    <tr>
+                                        <td>{{ escuela.id }}</td>
+                                        <td>{{ escuela.name }}</td>
+                                        <td>{{ escuela.ubic|default:"No especificada" }}</td>
+                                        <td>{{ escuela.usuarios_count|default:0 }}</td>
+                                        <td>{{ escuela.materiales_count|default:0 }}</td>
+                                        <td>
+                                            <span class="status-badge status-in-stock">
+                                                {{ escuela.es_depo|yesno:"Depósito,Escuela" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="action-btn edit" data-id="{{ escuela.id }}">Editar</button>
+                                            <button class="action-btn delete" data-id="{{ escuela.id }}">Eliminar</button>
+                                            <button class="action-btn view" data-id="{{ escuela.id }}">Ver</button>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 20px; color: #6c757d;">
+                                            No hay escuelas registradas
+                                        </td>
+                                    </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Formulario  -->
-                    <div class="form-container" id="schoolForm" style="display: none;">
-                        <h3 id="schoolFormTitle">Nueva Escuela</h3>
-                        <form id="schoolFormElement">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="schoolName">Nombre de la Escuela *</label>
-                                    <input type="text" id="schoolName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="schoolCode">Código de Escuela *</label>
-                                    <input type="text" id="schoolCode" required placeholder="Ej: SCH001">
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="schoolAddress">Dirección *</label>
-                                    <input type="text" id="schoolAddress" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="schoolPhone">Teléfono</label>
-                                    <input type="tel" id="schoolPhone">
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="schoolContactName">Nombre del Contacto *</label>
-                                    <input type="text" id="schoolContactName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="schoolContactEmail">Email del Contacto *</label>
-                                    <input type="email" id="schoolContactEmail" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-buttons">
-                                <button type="button" class="btn-cancel" id="cancelSchoolBtn">Cancelar</button>
-                                <button type="submit" class="btn-submit" id="saveSchoolBtn">Guardar Escuela</button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
-                
-                <!-- Configuración -->
+
+                <!-- ============================================ -->
+                <!-- SECCIÓN CONFIGURACIÓN -->
+                <!-- ============================================ -->
                 <div id="section-configuracion" class="dashboard-section">
                     <div class="content-header">
                         <h2>Configuración del Sistema</h2>
                     </div>
-                    
+
                     <div class="section-container">
                         <h3>Configuración General</h3>
                         <form id="generalSettingsForm">
@@ -742,7 +1410,7 @@
                                     <input type="email" id="systemEmail" value="soporte@luthinv.com">
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="lowStockThreshold">Umbral de Stock Bajo (%)</label>
@@ -753,75 +1421,19 @@
                                     <input type="number" id="criticalStockThreshold" min="1" max="100" value="10">
                                 </div>
                             </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="autoAlert">Alertas Automáticas</label>
-                                    <select id="autoAlert">
-                                        <option value="true" selected>Activadas</option>
-                                        <option value="false">Desactivadas</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="autoReport">Reportes Automáticos</label>
-                                    <select id="autoReport">
-                                        <option value="true">Activados</option>
-                                        <option value="false" selected>Desactivados</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
+
                             <div class="form-buttons">
                                 <button type="submit" class="btn-submit">Guardar Configuración</button>
                             </div>
                         </form>
                     </div>
-                    
-                    <div class="section-container">
-                        <div class="section-header">
-                            <h3>Configuración de Notificaciones</h3>
-                        </div>
-                        <form id="notificationSettingsForm">
-                            <div class="form-group">
-                                <label style="display: flex; align-items: center; gap: 10px;">
-                                    <input type="checkbox" id="notifyLowStock" checked>
-                                    <span>Notificar sobre stock bajo</span>
-                                </label>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label style="display: flex; align-items: center; gap: 10px;">
-                                    <input type="checkbox" id="notifyNewOrders" checked>
-                                    <span>Notificar sobre nuevos pedidos</span>
-                                </label>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label style="display: flex; align-items: center; gap: 10px;">
-                                    <input type="checkbox" id="notifyOrderStatus" checked>
-                                    <span>Notificar cambios en estado de pedidos</span>
-                                </label>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label style="display: flex; align-items: center; gap: 10px;">
-                                    <input type="checkbox" id="notifySystemAlerts">
-                                    <span>Notificar alertas del sistema</span>
-                                </label>
-                            </div>
-                            
-                            <div class="form-buttons">
-                                <button type="submit" class="btn-submit">Guardar Preferencias</button>
-                            </div>
-                        </form>
-                    </div>
-                    
+
                     <div class="section-container">
                         <div class="section-header">
                             <h3>Respaldo y Mantenimiento</h3>
                         </div>
                         <div class="form-buttons" style="justify-content: flex-start; gap: 15px;">
-                            <button class="btn-action" id="backupBtn">
+                            <button class="btn-action primary" id="backupBtn">
                                 <i class="fas fa-database"></i>
                                 <span>Crear Respaldo</span>
                             </button>
@@ -829,20 +1441,16 @@
                                 <i class="fas fa-broom"></i>
                                 <span>Limpiar Caché</span>
                             </button>
-                            <button class="btn-action" style="background-color: #e74c3c;" id="systemLogsBtn">
-                                <i class="fas fa-file-alt"></i>
-                                <span>Ver Logs del Sistema</span>
-                            </button>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
-        
+
         <footer class="dashboard-footer">
             <div class="footer-content">
                 <div class="footer-copyright">
-                    © 2023 Luth Inv. - Sistema de Inventario. v1.2.0
+                    © 2024 Luth Inv. - Sistema de Inventario. v1.2.0
                 </div>
                 <div class="footer-links">
                     <a href="#">Soporte</a>
@@ -853,7 +1461,7 @@
         </footer>
     </div>
 
-    <!-- Modal para detalles -->
+    <!-- Modales -->
     <div class="modal" id="detailModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -861,12 +1469,11 @@
                 <button class="modal-close" id="modalClose">&times;</button>
             </div>
             <div id="modalContent">
-                <!-- Contenido dinámico del modal -->
+                <!-- Contenido dinámico -->
             </div>
         </div>
     </div>
 
-    <!-- confirmación -->
     <div class="modal" id="confirmModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -874,7 +1481,7 @@
                 <button class="modal-close" id="confirmModalClose">&times;</button>
             </div>
             <div id="confirmModalContent">
-                <!-- Contenido  -->
+                <!-- Contenido dinámico -->
             </div>
             <div class="form-buttons" style="margin-top: 20px;">
                 <button type="button" class="btn-cancel" id="confirmCancelBtn">Cancelar</button>
@@ -883,6 +1490,24 @@
         </div>
     </div>
 
-    
+    <!-- Pasar datos de Django a JavaScript -->
+    <script>
+        window.djangoData = {{ data_json|safe }};
+        window.userData = {
+            id: {{ user.id }},
+            username: "{{ user.username|escapejs }}",
+            name: "{{ user.first_name|escapejs }} {{ user.last_name|escapejs }}",
+            email: "{{ user.email|escapejs }}",
+            rol: "{{ user.rol|escapejs }}",
+            rol_display: "{{ user.get_rol_display|escapejs }}"
+        };
+    </script>
+
+    <!-- Formulario oculto para logout (alternativo) -->
+    <form id="logoutForm" action="{% url 'logout' %}" method="post" style="display: none;">
+        {% csrf_token %}
+    </form>
+
+    <script src="{% static 'js/dashboard.js' %}"></script>
 </body>
 </html>

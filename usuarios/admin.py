@@ -8,7 +8,7 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     
 
-    list_display = ['username', 'email', 'rol', 'is_active', 'is_staff']
+    list_display = ['username', 'email', 'rol', 'is_active', 'is_staff', 'admin_of']
     
 
     list_filter = ['rol', 'is_staff', 'is_active']
